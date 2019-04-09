@@ -213,7 +213,7 @@ class Board(QFrame):
         painter.drawLine(self.width(), 0, self.width(), self.height())
 
     def updateData(self):
-        self.msg2Statusbar.emit("Lines cleared: " + str(self.score))
+        self.msg2Statusbar.emit("Lines cleared: " + str(self.score) + "\t Pieces consumed: " + str(BOARD_DATA.pieces_consumed))
         self.update()
 
 

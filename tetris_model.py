@@ -77,13 +77,31 @@ class BoardData(object):
         self.currentDirection = 0
         self.currentShape = Shape()
 
-        # Create batch of all 7 tetrominoes 
-        self.shapeQueue = list(range(1,8))
-        print(self.shapeQueue)
-        random.shuffle(self.shapeQueue)
-        self.nextShape = Shape(self.shapeQueue.pop(0)) # Get the first piece in the queue
+        self.pieces_consumed = 0
+
+        # Create batch of all 7 tetrominoes
+        self.shape_queue = list(range(1,8))
+        print(self.shape_queue)
+        random.shuffle(self.shape_queue)
+        if self.shape_queue[0] == 6 or self.shape_queue[0] == 7:
+            self.ensureGoodFirstPiece()
+
+        self.nextShape = Shape(self.shape_queue.pop(0)) # Get the first piece in the queue
 
         self.shapeStat = [0] * 8
+
+    def ensureGoodFirstPiece(self):
+        '''
+        Ensures that we don't begin with a Z or S piece because those cannot be placed
+        without creating holes.
+        '''
+        i = 1
+        while not (self.shape_queue[i] != 6 or self.shape_queue[i] != 7):
+            i += 1
+
+        temp = self.shape_queue[0]
+        self.shape_queue[0] = self.shape_queue[i]
+        self.shape_queue[i] = temp
 
     def getData(self):
         return self.backBoard[:]
@@ -96,13 +114,14 @@ class BoardData(object):
 
     def getNextShape(self):
         # Make new batch if we ran out of pieces
-        if len(self.shapeQueue) == 0:
-            self.shapeQueue = list(range(1,8))
-            random.shuffle(self.shapeQueue)
+        if len(self.shape_queue) == 0:
+            self.shape_queue = list(range(1,8))
+            random.shuffle(self.shape_queue)
 
-        print(self.shapeQueue)
+        print("Removed a piece: " + str(self.shape_queue))
+        self.pieces_consumed += 1
 
-        return Shape(self.shapeQueue.pop(0))
+        return Shape(self.shape_queue.pop(0))
 
     def createNewPiece(self):
         minX, maxX, minY, maxY = self.nextShape.getBoundingOffsets(0)
