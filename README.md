@@ -1,5 +1,11 @@
 # Tetris Game
 
+# TODO:
+
+* Make it create pieces in batches of 7
+
+=============================================================================================
+
 It is a python implementatino of Tetris Game, and a simple AI to play game automatically.
 
 Need python3, PyQt5 and NumPy to be installed.
