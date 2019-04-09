@@ -23,7 +23,7 @@ class Tetris(QMainWindow):
 
     def initUI(self):
         self.gridSize = 22
-        self.speed = 10
+        self.speed = 109
 
         self.timer = QBasicTimer()
         self.setFocusPolicy(Qt.StrongFocus)
@@ -57,7 +57,7 @@ class Tetris(QMainWindow):
             return
 
         self.isStarted = True
-        self.tboard.score = 0
+        self.tboard.score = 0 
         BOARD_DATA.clear()
 
         self.tboard.msg2Statusbar.emit(str(self.tboard.score))
@@ -213,7 +213,7 @@ class Board(QFrame):
         painter.drawLine(self.width(), 0, self.width(), self.height())
 
     def updateData(self):
-        self.msg2Statusbar.emit(str(self.score))
+        self.msg2Statusbar.emit("Lines cleared: " + str(self.score))
         self.update()
 
 

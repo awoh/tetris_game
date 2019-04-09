@@ -2,6 +2,10 @@
 
 # TODO:
 
+* Add counter for total number of pieces used
+
+# DONE:
+
 * Make it create pieces in batches of 7
 
 =============================================================================================

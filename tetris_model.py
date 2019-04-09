@@ -76,7 +76,12 @@ class BoardData(object):
         self.currentY = -1
         self.currentDirection = 0
         self.currentShape = Shape()
-        self.nextShape = Shape(random.randint(1, 7))
+
+        # Create batch of all 7 tetrominoes 
+        self.shapeQueue = list(range(1,8))
+        print(self.shapeQueue)
+        random.shuffle(self.shapeQueue)
+        self.nextShape = Shape(self.shapeQueue.pop(0)) # Get the first piece in the queue
 
         self.shapeStat = [0] * 8
 
@@ -89,6 +94,16 @@ class BoardData(object):
     def getCurrentShapeCoord(self):
         return self.currentShape.getCoords(self.currentDirection, self.currentX, self.currentY)
 
+    def getNextShape(self):
+        # Make new batch if we ran out of pieces
+        if len(self.shapeQueue) == 0:
+            self.shapeQueue = list(range(1,8))
+            random.shuffle(self.shapeQueue)
+
+        print(self.shapeQueue)
+
+        return Shape(self.shapeQueue.pop(0))
+
     def createNewPiece(self):
         minX, maxX, minY, maxY = self.nextShape.getBoundingOffsets(0)
         result = False
@@ -97,7 +112,7 @@ class BoardData(object):
             self.currentY = -minY
             self.currentDirection = 0
             self.currentShape = self.nextShape
-            self.nextShape = Shape(random.randint(1, 7))
+            self.nextShape = self.getNextShape()
             result = True
         else:
             self.currentShape = Shape()
