@@ -67,7 +67,7 @@ class Shape(object):
 
 class BoardData(object):
     width = 10
-    height = 22
+    height = 20
 
     def __init__(self):
         self.backBoard = [0] * BoardData.width * BoardData.height
@@ -81,7 +81,7 @@ class BoardData(object):
 
         # Create batch of all 7 tetrominoes
         self.shape_queue = list(range(1,8))
-        print(self.shape_queue)
+        # print(self.shape_queue)
         random.shuffle(self.shape_queue)
         if self.shape_queue[0] == 6 or self.shape_queue[0] == 7:
             self.ensureGoodFirstPiece()
@@ -118,7 +118,7 @@ class BoardData(object):
             self.shape_queue = list(range(1,8))
             random.shuffle(self.shape_queue)
 
-        print("Removed a piece: " + str(self.shape_queue))
+        # print('Removed a piece: ' + str(self.shape_queue))
         self.pieces_consumed += 1
 
         return Shape(self.shape_queue.pop(0))

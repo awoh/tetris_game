@@ -8,6 +8,10 @@
 
 * Make it create pieces in batches of 7
 
+# USEFUL LINKS:
+
+* tutorial/explanation of a similar code repo: http://zetcode.com/gui/pyqt5/tetris/
+
 =============================================================================================
 
 It is a python implementatino of Tetris Game, and a simple AI to play game automatically.

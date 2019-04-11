@@ -22,8 +22,8 @@ class Tetris(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.gridSize = 22
-        self.speed = 109
+        self.gridSize = 22 # window size
+        self.speed = .1 
 
         self.timer = QBasicTimer()
         self.setFocusPolicy(Qt.StrongFocus)
@@ -73,7 +73,7 @@ class Tetris(QMainWindow):
 
         if self.isPaused:
             self.timer.stop()
-            self.tboard.msg2Statusbar.emit("paused")
+            self.tboard.msg2Statusbar.emit('paused')
         else:
             self.timer.start(self.speed, self)
 
@@ -116,6 +116,9 @@ class Tetris(QMainWindow):
             return
 
         key = event.key()
+
+        if key == Qt.Key_Escape:
+            app.quit()
         
         if key == Qt.Key_P:
             self.pause()
@@ -213,7 +216,7 @@ class Board(QFrame):
         painter.drawLine(self.width(), 0, self.width(), self.height())
 
     def updateData(self):
-        self.msg2Statusbar.emit("Lines cleared: " + str(self.score) + "\t Pieces consumed: " + str(BOARD_DATA.pieces_consumed))
+        self.msg2Statusbar.emit('Lines cleared: ' + str(self.score) + ' Pieces consumed: ' + str(BOARD_DATA.pieces_consumed))
         self.update()
 
 
@@ -222,3 +225,4 @@ if __name__ == '__main__':
     app = QApplication([])
     tetris = Tetris()
     sys.exit(app.exec_())
+    print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')

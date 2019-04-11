@@ -6,6 +6,7 @@ import math
 from datetime import datetime
 import numpy as np
 
+ii = 0
 
 class TetrisAI(object):
 
@@ -19,12 +20,15 @@ class TetrisAI(object):
         _, _, minY, _ = BOARD_DATA.nextShape.getBoundingOffsets(0)
         nextY = -minY
 
-        # print("=======")
+        # print('=======')
         strategy = None
+
+        # d0Range and d1Range refer to how many different configurations of the tetromino we can get ONLY via rotations.
+        # d0Range is for the current piece, and d1Range is for the next piece
         if BOARD_DATA.currentShape.shape in (Shape.shapeI, Shape.shapeZ, Shape.shapeS):
-            d0Range = (0, 1)
+            d0Range = (0, 1)  
         elif BOARD_DATA.currentShape.shape == Shape.shapeO:
-            d0Range = (0,)
+            d0Range = (0,) # Rotating the square piece does nothing
         else:
             d0Range = (0, 1, 2, 3)
 
@@ -46,10 +50,16 @@ class TetrisAI(object):
                         score = self.calculateScore(np.copy(board), d1, x1, dropDist)
                         if not strategy or strategy[2] < score:
                             strategy = (d0, x0, score)
-        print("===", datetime.now() - t1)
-        return strategy
+        print('===', datetime.now() - t1)
+        print('here: ' + str(strategy))
+        print(str(BOARD_DATA.shape_queue))
+        # if strategy[2]
+        t1,t2,t3 = strategy # t1 is rotation, t2 is which column to place, t3 is the score of the board
+        return (0,5,0)
+        # return strategy
 
     def calcNextDropDist(self, data, d0, xRange):
+        global ii # TODO: delete this ii counter shit. it was for printing.
         res = {}
         for x0 in xRange:
             if x0 not in res:
@@ -61,6 +71,9 @@ class TetrisAI(object):
                 yy -= 1
                 if yy < res[x0]:
                     res[x0] = yy
+        # if ii < 10:
+        print('drop dist: ' + str(res))
+        # ii+=1
         return res
 
     def calcStep1Board(self, d0, x0):
@@ -77,7 +90,7 @@ class TetrisAI(object):
             yy -= 1
             if yy < dy:
                 dy = yy
-        # print("dropDown: shape {0}, direction {1}, x0 {2}, dy {3}".format(shape.shape, direction, x0, dy))
+        # print('dropDown: shape {0}, direction {1}, x0 {2}, dy {3}'.format(shape.shape, direction, x0, dy))
         self.dropDownByDist(data, shape, direction, x0, dy)
 
     def dropDownByDist(self, data, shape, direction, x0, dist):
@@ -85,7 +98,7 @@ class TetrisAI(object):
             data[y + dist, x] = shape.shape
 
     def calculateScore(self, step1Board, d1, x1, dropDist):
-        # print("calculateScore")
+        # print('calculateScore')
         t1 = datetime.now()
         width = BOARD_DATA.width
         height = BOARD_DATA.height
@@ -139,7 +152,10 @@ class TetrisAI(object):
 
         score = fullLines * 1.8 - vHoles * 1.0 - vBlocks * 0.5 - maxHeight ** 1.5 * 0.02 \
             - stdY * 0.0 - stdDY * 0.01 - absDy * 0.2 - maxDy * 0.3
+        print('++++++++++++++++++')
         # print(score, fullLines, vHoles, vBlocks, maxHeight, stdY, stdDY, absDy, roofY, d0, x0, d1, x1)
+        print('score: {} | fullLines: {} | vHoles: {} | vBlocks: {} | maxHeight: {} | stdY: {} | stdDY: {} | absDy: {} | roofY: {} | d1: {} | x1: {}'.format(score, fullLines, vHoles, vBlocks, maxHeight, stdY, stdDY, absDy, roofY, d1, x1))
+        print('++++++++++++++++++')
         return score
 
 
