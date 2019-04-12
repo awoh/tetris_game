@@ -13,15 +13,28 @@ class Shape(object):
     shapeS = 6
     shapeZ = 7
 
+    # ORIGINAL
+    # shapeCoord = (
+    #     ((0, 0), (0, 0), (0, 0), (0, 0)),
+    #     ((0, -1), (0, 0), (0, 1), (0, 2)),      # I piece
+    #     ((0, -1), (0, 0), (0, 1), (1, 1)),      # J piece
+    #     ((0, -1), (0, 0), (0, 1), (-1, 1)),     # L piece
+    #     ((0, -1), (0, 0), (0, 1), (1, 0)),      # T piece
+    #     ((0, 0), (0, -1), (1, 0), (1, -1)),     # O piece
+    #     ((0, 0), (0, -1), (-1, 0), (1, -1)),    # Z piece
+    #     ((0, 0), (0, -1), (1, 0), (-1, -1))     # S piece
+    # )
+
+    # MODIFIED
     shapeCoord = (
         ((0, 0), (0, 0), (0, 0), (0, 0)),
-        ((0, -1), (0, 0), (0, 1), (0, 2)),
-        ((0, -1), (0, 0), (0, 1), (1, 1)),
-        ((0, -1), (0, 0), (0, 1), (-1, 1)),
-        ((0, -1), (0, 0), (0, 1), (1, 0)),
-        ((0, 0), (0, -1), (1, 0), (1, -1)),
-        ((0, 0), (0, -1), (-1, 0), (1, -1)),
-        ((0, 0), (0, -1), (1, 0), (-1, -1))
+        ((-2, 0), (-1, 0), (0, 0), (1, 0)),       # I piece
+        ((-2, -1), (-2, 0), (-1, 0), (0, 0)),     # J piece
+        ((0, -1), (-2, 0), (-1, 0), (0, 0)),      # L piece
+        ((-2, -1), (-1, -1), (0, -1), (-1, -2)),  # T piece
+        ((-1, 0), (-1, -1), (0, 0), (0, -1)),     # O piece
+        ((-1, 0), (-1, -1), (-2, 0), (0, -1)),    # S piece
+        ((-1, 0), (-1, -1), (0, 0), (-2, -1))     # Z piece
     )
 
     def __init__(self, shape=0):
@@ -123,7 +136,10 @@ class BoardData(object):
 
         return Shape(self.shape_queue.pop(0))
 
+
     def createNewPiece(self):
+        print("new piece")
+
         minX, maxX, minY, maxY = self.nextShape.getBoundingOffsets(0)
         result = False
         if self.tryMoveCurrent(0, 5, -minY):
@@ -134,6 +150,7 @@ class BoardData(object):
             self.nextShape = self.getNextShape()
             result = True
         else:
+            # TODO: this is where we know when we've lost. restart program here
             self.currentShape = Shape()
             self.currentX = -1
             self.currentY = -1
