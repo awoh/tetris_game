@@ -4,11 +4,35 @@
 
 # TODO:
 
-* Add counter for total number of pieces used
+* implement RL...
 
 # DONE:
 
 * Make it create pieces in batches of 7
+
+# PAPERS
+
+* Temporal Differences-Based Policy Iteration and Applications in Neuro-Dynamic Programming
+
+* Approximate Dynamic Programming Finally Performs Well in the Game of Tetris
+
+* Approximate Modified Policy Iteration
+
+* How to Lose at Tetris
+
+* Approximate Modified Policy Iteration and its Application to the Game of Tetris
+
+* Approximate Policy Iteration Schemes: A Comparison
+
+* Performance Bounds for λ Policy Iteration and Application to the Game of Tetris
+
+* Learning Tetris Using the Noisy Cross-Entropy Method
+
+* Can you win at TETRIS?
+
+* (probably useless) An Algorithmic Survey of Parametric Value Function Approximation
+
+* (probably useless) On the evolution of artificial Tetris players
 
 # USEFUL LINKS:
 
