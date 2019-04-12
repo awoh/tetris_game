@@ -1,5 +1,7 @@
 # Tetris Game
 
+**You must run `chmod a+x tetris_model.py` in order for the program to restart itself!!!**
+
 # TODO:
 
 * Add counter for total number of pieces used

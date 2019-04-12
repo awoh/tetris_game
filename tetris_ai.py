@@ -6,7 +6,6 @@ import math
 from datetime import datetime
 import numpy as np
 
-ii = 0
 
 class TetrisAI(object):
 
@@ -51,15 +50,11 @@ class TetrisAI(object):
                         if not strategy or strategy[2] < score:
                             strategy = (d0, x0, score)
         print('===', datetime.now() - t1)
-        print('here: ' + str(strategy))
-        print(str(BOARD_DATA.shape_queue))
-        # if strategy[2]
         t1,t2,t3 = strategy # t1 is rotation, t2 is which column to place, t3 is the score of the board
         return (0,5,0)
         # return strategy
 
     def calcNextDropDist(self, data, d0, xRange):
-        global ii # TODO: delete this ii counter shit. it was for printing.
         res = {}
         for x0 in xRange:
             if x0 not in res:
@@ -71,9 +66,6 @@ class TetrisAI(object):
                 yy -= 1
                 if yy < res[x0]:
                     res[x0] = yy
-        # if ii < 10:
-        print('drop dist: ' + str(res))
-        # ii+=1
         return res
 
     def calcStep1Board(self, d0, x0):

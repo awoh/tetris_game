@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import os
+import sys
 import random
 
 class Shape(object):
@@ -151,6 +153,7 @@ class BoardData(object):
             result = True
         else:
             # TODO: this is where we know when we've lost. restart program here
+            os.execv('tetris_game.py', sys.argv)
             self.currentShape = Shape()
             self.currentX = -1
             self.currentY = -1
