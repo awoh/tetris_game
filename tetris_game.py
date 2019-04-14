@@ -1,17 +1,22 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys, random
+import sys, random, time, os
 from PyQt5.QtWidgets import QMainWindow, QFrame, QDesktopWidget, QApplication, QHBoxLayout, QLabel
-from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal
+from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, QCoreApplication
 from PyQt5.QtGui import QPainter, QColor
 
+from __main__ import *
+
+import tetris_model
+from tetris_model import BOARD_DATA, Shape
 from tetris_model import BOARD_DATA, Shape
 from tetris_ai import TETRIS_AI
 
-import os
+# TETRIS_AI = None
 
-TETRIS_AI = None
+episode_count = 0 # number of episodes we have done
+NUM_EPISODES = 10
 
 class Tetris(QMainWindow):
     def __init__(self):
@@ -20,6 +25,10 @@ class Tetris(QMainWindow):
         self.isPaused = False
         self.nextMove = None
         self.lastShape = Shape.shapeNone
+        # self.episode_history = episode_data
+        # BOARD_DATA = tetris_model.BoardData(episode_data)
+        tetris_model.episode_data = []
+        BOARD_DATA.pieces_consumed = 0
 
         self.initUI()
 
@@ -81,12 +90,16 @@ class Tetris(QMainWindow):
 
         self.updateWindow()
 
+    def getBoardData(self):
+        return BOARD_DATA
+
     def updateWindow(self):
         self.tboard.updateData()
         self.sidePanel.updateData()
         self.update()
 
     def timerEvent(self, event):
+        global exit_code, episode_count
         if event.timerId() == self.timer.timerId():
             if TETRIS_AI and not self.nextMove:
                 self.nextMove = TETRIS_AI.nextMove()
@@ -104,6 +117,16 @@ class Tetris(QMainWindow):
                     k += 1
             # lines = BOARD_DATA.dropDown()
             lines = BOARD_DATA.moveDown()
+
+            # We have lost the game, restart! FIXME: ignore the fixme. that is so I can easily find this line of code.
+            if lines == -1:
+                episode_count += 1
+                self.close()
+                # return BOARD_DATA
+                # return -15123123
+                # return QCoreApplication.exit( -15123123 )
+                # app.quit()
+
             self.tboard.score += lines
             if self.lastShape != BOARD_DATA.currentShape:
                 self.nextMove = None
@@ -120,7 +143,7 @@ class Tetris(QMainWindow):
         key = event.key()
 
         if key == Qt.Key_Escape:
-            app.quit()
+            self.close()
         
         if key == Qt.Key_P:
             self.pause()
@@ -224,6 +247,13 @@ class Board(QFrame):
 
 if __name__ == '__main__':
     # random.seed(32)
-    app = QApplication([])
-    tetris = Tetris()
-    app.exec_()
+    # while exit_code == EXIT_CODE_REBOOT:
+    while episode_count < NUM_EPISODES:
+        # exit_code = 0
+        app = QApplication([])
+        tetris = Tetris()
+        app.exec_()
+        app = None
+
+        print('exit code: ' + str(exit_code))
+        print('count: ' + str(episode_count))

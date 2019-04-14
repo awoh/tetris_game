@@ -5,6 +5,9 @@ import os
 import sys
 import random
 
+# from run_model import episode_data
+episode_data = []
+
 class Shape(object):
     shapeNone = 0
     shapeI = 1
@@ -27,16 +30,16 @@ class Shape(object):
     #     ((0, 0), (0, -1), (1, 0), (-1, -1))     # S piece
     # )
 
-    # MODIFIED
+    # MODIFIED (fixed spawn orientations)
     shapeCoord = (
         ((0, 0), (0, 0), (0, 0), (0, 0)),
-        ((-2, 0), (-1, 0), (0, 0), (1, 0)),       # I piece
-        ((-2, -1), (-2, 0), (-1, 0), (0, 0)),     # J piece
-        ((0, -1), (-2, 0), (-1, 0), (0, 0)),      # L piece
-        ((-2, -1), (-1, -1), (0, -1), (-1, -2)),  # T piece
-        ((-1, 0), (-1, -1), (0, 0), (0, -1)),     # O piece
-        ((-1, 0), (-1, -1), (-2, 0), (0, -1)),    # S piece
-        ((-1, 0), (-1, -1), (0, 0), (-2, -1))     # Z piece
+        ((-2, 0), (-1, 0), (0, 0), (1, 0)),       # I piece (1)
+        ((-2, -1), (-2, 0), (-1, 0), (0, 0)),     # J piece (2)
+        ((0, -1), (-2, 0), (-1, 0), (0, 0)),      # L piece (3)
+        ((-2, -1), (-1, -1), (0, -1), (-1, -2)),  # T piece (4)
+        ((-1, 0), (-1, -1), (0, 0), (0, -1)),     # O piece (5)
+        ((-1, 0), (-1, -1), (-2, 0), (0, -1)),    # S piece (6)
+        ((-1, 0), (-1, -1), (0, 0), (-2, -1))     # Z piece (7)
     )
 
     def __init__(self, shape=0):
@@ -91,6 +94,8 @@ class BoardData(object):
         self.currentY = -1
         self.currentDirection = 0
         self.currentShape = Shape()
+        episode_data = []
+        print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
 
         self.pieces_consumed = 0
 
@@ -140,7 +145,7 @@ class BoardData(object):
 
 
     def createNewPiece(self):
-        print("new piece")
+        episode_data.append((self.backBoard, self.nextShape.shape))
 
         minX, maxX, minY, maxY = self.nextShape.getBoundingOffsets(0)
         result = False
@@ -152,8 +157,8 @@ class BoardData(object):
             self.nextShape = self.getNextShape()
             result = True
         else:
-            # TODO: this is where we know when we've lost. restart program here
-            os.execv('tetris_game.py', sys.argv)
+            # FIXME: this is where we know when we've lost. restart program here
+            # os.execv('tetris_game.py', sys.argv)
             self.currentShape = Shape()
             self.currentX = -1
             self.currentY = -1
@@ -180,7 +185,8 @@ class BoardData(object):
         else:
             self.mergePiece()
             lines = self.removeFullLines()
-            self.createNewPiece()
+            if not self.createNewPiece():
+                return -1
         return lines
 
     def dropDown(self):

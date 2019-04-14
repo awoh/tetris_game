@@ -1,6 +1,6 @@
 # Tetris Game
 
-**You must run `chmod a+x tetris_model.py` in order for the program to restart itself!!!**
+<!-- **You must run `chmod a+x tetris_model.py` in order for the program to restart itself!!!** -->
 
 # TODO:
 
