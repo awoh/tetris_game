@@ -4,7 +4,7 @@
 
 # TODO:
 
-* implement RL...
+* implement RL (mdp_ai.py)...
 
 # DONE:
 
