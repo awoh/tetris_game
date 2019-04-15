@@ -17,7 +17,10 @@ def prettyPrint(board):
 
     for i in range(20):
         for j in range(10):
-            ret += str(board[i*10 + j]) + ', '
+            if board[i*10 + j] != 0:
+                ret += '#, ' 
+            else:
+                ret += str(board[i*10 + j]) + ', '
         ret += '\n'
 
     return ret
@@ -29,8 +32,8 @@ if __name__ == "__main__":
         tetris = tetris_game.Tetris()
         app.exec_()
 
-        # print('DATA:\n' + prettyPrint(tetris.getBoardData().backBoard))
-        print('DATA:\n' + str((tetris_model.episode_data)))
+        print('DATA:\n' + prettyPrint(tetris.getBoardData().backBoard))
+        # print('DATA:\n' + str((tetris_model.episode_data)))
         # print('DATA:\n' + str(len(tetris_model.getEpisodeData())))
         app = None
         tetris = None

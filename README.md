@@ -34,6 +34,16 @@
 
 * (probably useless) On the evolution of artificial Tetris players
 
+* (features) Improvements on Learning Tetris with Cross Entropy
+
+* (features) A comparison of feature functions for Tetris strategies
+
+* (features) Building Controllers for Tetris
+
+* (features) How to design good Tetris players
+
+* (features) Tetris Agent Optimization Using Harmony Search Algorithm
+
 # USEFUL LINKS:
 
 * tutorial/explanation of a similar code repo: http://zetcode.com/gui/pyqt5/tetris/
