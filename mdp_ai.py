@@ -1,6 +1,5 @@
 """
 Improved AI for Tetris - uses MDP
-
 Authors: Sarah Eisenach and Niall Williams
 """
 #!/usr/bin/python3
@@ -11,9 +10,9 @@ import math
 from datetime import datetime
 import numpy as np
 from sklearn import linear_model, svm
+import pickle
 
 class TetrisAI(object):
-
 
     # each game, AI does a random # of random moves in beginning
 
@@ -26,22 +25,54 @@ class TetrisAI(object):
     # evaluation function to evaluate all states:
         # f is defined as linear combo of set of features, phi
         # f(.) = phi * (.) * theta, theta = parameter vector (policy/controller)
-    def nextMove():
+    def nextMove(policy, board):
+        """
+        Return the next move for the board.
+        Used for generating the initial states
+        Initially use the weights provided in the DU controller from other paper as policy
+        Maybe change this after it learns some...
+        """
         pass
 
+    def makeMove(next_move, board):
+        """
+        Code taken from timerEvent() in tetris_game.py
+        Makes the move on the board
+        """
+        k = 0
+        while board.currentDirection != next_move[0] and k < 4:
+            board.rotateRight()
+            k += 1
+        k = 0
+        while board.currentX != next_move[1] and k < 5:
+            if board.currentX > next_move[1]:
+                board.moveLeft()
+            elif board.currentX < next_move[1]:
+                board.moveRight()
+            k += 1
+        # lines = BOARD_DATA.dropDown()
+        lines = board.moveDown()    # creates new piece after moving down
+        return lines, board
+
     def getRandomState(num_moves):
+        """
+        Creates initial random state for training
+        """
         # let regular tetris_ai calculateScore get random initial moves for state in D
-        # (use the weights provided in the DU controller from other paper)
         board = BoardData()
+        board.createNewPiece()  # create initial piece
         for i in range(num_moves):
-            board.createNewPiece()
-            move = nextMove()
-            board.tryMoveCurrent(move)
+            next_move = nextMove(policy, board)
+            lines, board = makeMove(next_move, board)
 
         return board
 
-    def rollout(s, steps, curr_val):
-        # generate rollout for state of size m (go up to m steps away) (go fromm 0 to m-1)
+
+    def rollout(board, steps, curr_val, init_action):
+        """
+        Generate rollout for a given state (goes steps number of actions into future)
+        Returns the total reward for the rollout
+        """
         curr_state = s
         tot_reward = 0
         # need to go from 0 to m-1, m is an upper bound (since game may end earlier)
@@ -50,25 +81,29 @@ class TetrisAI(object):
 
             # WHEN DO YOU UPDATE ACTION?? (AFTER REWARD OR BEFORE?),
             # IS INITIAL STATE INCLUDED IN REWARD??
-            curr_reward = calculateReward(curr_state)   # curr_reward is the immediate reward (score)
+            curr_reward = calculateReward(curr_state)   # curr_reward is the immediate reward (score) --> what is this??
             tot_reward += exp(gamma,i) * curr_reward    # add gamma*reward to sum of rewards
 
-            # make next move
-            a = curr_policy.predict(curr_state)
-            curr_state = board.makeMove(a)
+            # make next move... if first iteration, then use provided action (handles for R(s,a) calculations)
+            if i == 0:
+                next_move = init_action
+            else:
+                next_move = curr_policy.predict(curr_state)
+            curr_state = makeMove(next_move, curr_state)    # makes move, and then creates next piece
 
         # compute the unbiased estimate (v), prev_v based on m moves away from s
         tot_reward += exp(gamma, steps) * curr_val.predict(curr_state)
 
         return tot_reward
 
-
-    """starts with init policy and value and generates a sequence of value-new_policy
-    pairs (v_k = evaluation step and policy_k+1 = greedy step) """
     def mpi():
+        """
+        starts with init policy and value and generates a sequence of value-new_policy
+        pairs (v_k = evaluation step and policy_k+1 = greedy step)
+        """
         curr_policy     # policy_1 (arbitrary)
         curr_val        # value_0 function (arbitrary)
-        A = {}      #action set (32 possible actions)
+        A = {}      #action set (32 possible actions)...what are these???
         M = 1
         done = False
 
@@ -89,21 +124,22 @@ class TetrisAI(object):
                 # generate random initial state by making num_moves number of moves
                 s = getRandomState(num_moves)
 
-                # generate rollout for state of size m (go up to m steps away) (go fromm 0 to m-1)
-                v_hat = rollout(s, m, curr_val)
+                # generate rollout for state of size m (go up to m steps away)
+                v_hat = rollout(s, m, curr_val, curr_val.predict(s))
 
                 # add (s, v) to training set for regressor (x = state_set, y = val_set)
                 state_set = np.append(state_set, [s])
                 val_set = np.append(val_set, [v_hat])
 
                 state_q = np.array([])
-                # for every possible action from state s, follow policy
+
+                # for every possible action from state s, make action and then follow policy for m steps
                 for a in A:
                     # build M rollouts  (get rewards for all future states (1 -> m+1))
                     tot_Q = 0
                     for i in range(M):
                         # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
-                        R = rollout(s, m+1, curr_val)
+                        R = rollout(s, m+1, curr_val, a)
                         tot_Q += R
 
                     # calculate Q_hat
@@ -126,7 +162,15 @@ class TetrisAI(object):
             curr_policy = new_policy      # update current policy function
 
 
-            # if curr_policy is approximately new_policy, end
+            # if curr_policy is approximately new_policy, save policy into file end
             if(curr_policy == new_policy):
-                return curr_policy
-                # break
+                # return curr_policy
+                # save the model to disk, CAN USE PICKLE OR JOBLIB
+                pickle.dump(model, open('finalized_policy.sav', 'wb'))
+                break
+                
+
+# some time later...
+def main:
+    # load the model from disk
+    policy = pickle.load(open('finalized_policy.sav', 'rb'))
