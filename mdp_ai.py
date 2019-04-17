@@ -10,6 +10,7 @@ import math
 from datetime import datetime
 import numpy as np
 from sklearn import linear_model, svm
+import sys
 import pickle
 
 class TetrisAI(object):
@@ -25,14 +26,28 @@ class TetrisAI(object):
     # evaluation function to evaluate all states:
         # f is defined as linear combo of set of features, phi
         # f(.) = phi * (.) * theta, theta = parameter vector (policy/controller)
-    def nextMove(policy, board):
+    def nextMove(weights, board):
         """
         Return the next move for the board.
         Used for generating the initial states
         Initially use the weights provided in the DU controller from other paper as policy
         Maybe change this after it learns some...
         """
-        pass
+        action_set = getActionSet(board)
+        scores = np.array([])
+        for a in action_set:
+            # do action
+            if a == (-1,-1):
+                score = -sys.maxint -1
+            else:
+                score, new_board = makeMove(a, board)
+                # score = calculateReward(new_board)   # evaluate and add to list
+            np.append(scores, [score])
+
+        best = np.argwhere(scores == np.amax(scores))
+        best = best.flatten().tolist()
+        max = np.random.choice(best)
+        return action_set[max]
 
     def makeMove(next_move, board):
         """
@@ -68,34 +83,9 @@ class TetrisAI(object):
 
         return board
 
-
-    def rollout(board, steps, curr_val, curr_policy, init_action):
-        """
-        Generate rollout for a given state (goes steps number of actions into future)
-        Returns the total reward for the rollout
-        """
-        curr_state = s
-        tot_reward = 0
-        # need to go from 0 to m-1, m is an upper bound (since game may end earlier)
-        for i in range(steps):
-            # get state, action, reward tuple
-
-            # WHEN DO YOU UPDATE ACTION?? (AFTER REWARD OR BEFORE?),
-            # IS INITIAL STATE INCLUDED IN REWARD??
-            curr_reward = calculateReward(curr_state)   # curr_reward is the immediate reward (score) --> what is this??
-            tot_reward += exp(gamma,i) * curr_reward    # add gamma*reward to sum of rewards
-
-            # make next move... if first iteration, then use provided action (handles for R(s,a) calculations)
-            if i == 0:
-                next_move = init_action
-            else:
-                next_move = getAction(curr_policy.predict((curr_state.getData, curr_state.currentShape)))
-            curr_state = makeMove(next_move, curr_state)    # makes move, and then creates next piece
-
-        # compute the unbiased estimate (v), prev_v based on m moves away from s
-        tot_reward += exp(gamma, steps) * curr_val.predict((curr_state.getData, curr_state.currentShape))
-
-        return tot_reward
+    def getFeatures(s):
+        feature_array = np.array([1]*35)
+        return feature_array
 
     def getActionSet(board):
         """
@@ -103,20 +93,61 @@ class TetrisAI(object):
         max size of A = 34 (for L, J, and T)
         we want size A = 40 (try every possible rotation/column pair)
         """
-        A = list()
+        A = list()  # r = rotation, c = column
         for r in range(4):
             for c in range(10):
-                if(board.tryMoveCurrent(r, c, 0)):
+                if(board.tryMoveCurrent(r, c)):
                     A.append((r,c)) # add to set
                 else:
                     A.append((-1,-1))
         return A
 
-    def getAction():
+    def getAction(board, policy, action_set):
         """
         return action for policy, chooses max from classifier output
         """
-        pass
+        board_features = getFeatures(board)
+        piece = board.currentShape.shape
+        # one hot encode piece
+        piece = [0]*7
+        piece[s.currentShape.shape -1] = 1
+        actions = policy.predict([board_features, piece])
+        best = np.argwhere(actions == np.amax(actions))
+        best = best.flatten().tolist()
+        max = np.random.choice(best)
+        return action_set[max]
+
+
+    def rollout(board, steps, curr_val, curr_policy, init_action, action_set):
+        """
+        Generate rollout for a given state (goes steps number of actions into future)
+        Returns the total reward for the rollout
+        """
+        curr_state = s
+        s_features = getFeatures(curr_state)
+        tot_reward = 0
+        curr_reward = 0 # PROBABLY SHOULD CHANGE???????????
+        # need to go from 0 to m-1, m is an upper bound (since game may end earlier)
+        for i in range(steps):
+            # get state, action, reward tuple
+
+            # WHEN DO YOU UPDATE ACTION?? (AFTER REWARD OR BEFORE?),
+            # IS INITIAL STATE INCLUDED IN REWARD??
+            # curr_reward = calculateReward(curr_state)   # curr_reward is the immediate reward (score, ie # lines cleared)
+            tot_reward += exp(gamma,i) * curr_reward    # add gamma*reward to sum of rewards
+
+            # make next move... if first iteration, then use provided action (handles for R(s,a) calculations)
+            if i == 0:
+                next_move = init_action
+            else:
+                next_move = getAction(curr_state, curr_policy, action_set)
+            curr_reward, curr_state = makeMove(next_move, curr_state)    # makes move, and then creates next piece
+            s_features = getFeatures(curr_state)
+
+        # compute the unbiased estimate (v), prev_v based on m moves away from s
+        tot_reward += exp(gamma, steps) * curr_val.predict(s_features)
+
+        return tot_reward
 
     def play(policy):
         board = BoardData()
@@ -128,16 +159,17 @@ class TetrisAI(object):
 
         return game_lines
 
-    def mpi(A, N, M, m, init_policy, init_val):
+    def mpi(N, M, m, error_threshold):
         """
         starts with init policy and value and generates a sequence of value-new_policy
         pairs (v_k = evaluation step and policy_k+1 = greedy step)
         """
         done = False
         curr_policy_score = 0
-
+        print("hi")
         # i don't know what k is... maybe just do while not done (until new_policy = curr_policy)
-        while !done:
+        while not done:
+            print("hi")
         # for k  in range(idk):
             # at every iteration, build new value function and policy function
 
@@ -150,44 +182,59 @@ class TetrisAI(object):
 
                 # generate random initial state by making num_moves number of moves
                 s = getRandomState()
+                s_features = getFeatures(s)
+                A = getActionSet(s)
 
                 # generate rollout for state of size m (go up to m steps away)
-                action = getAction(curr_policy.predict((s.getData, s.currentShape)))
-                v_hat = rollout(s, m, curr_val, curr_policy, action)
+                action = getAction(s, curr_policy, A)
+                v_hat = rollout(s, m, curr_val, curr_policy, action, A)
+
 
                 # add (s, v) to training set for regressor (x = state_set, y = val_set)
-                state_set = np.append(state_set, [(s.getData, s.currentShape)])
+                # s is represented by the features determined in board
+                state_set = np.append(state_set, [s_features])
                 val_set = np.append(val_set, [v_hat])
 
                 state_q = np.array([])
 
                 # for every possible action from state s, make action and then follow policy for m steps
-                A = getActionSet(s)
+
                 for a in A:
                     # build M rollouts  (get rewards for all future states (1 -> m+1))
                     tot_Q = 0
+
+                    # if action not possible...
+                    if a == (-1,-1):
+                        pass
                     for i in range(M):
                         # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
-                        R = rollout(s, m+1, curr_val, curr_policy, a)
+                        R = rollout(s, m+1, curr_val, curr_policy, a, A)
                         tot_Q += R
 
                     # calculate Q_hat
                     Q_hat = tot_Q / M
                     state_q = np.append(state_q, [Q_hat])   # add Q_hat value to list of Q's for given state
 
+
                 q_set = np.append(q_set, [state_q])     # output values for classifier (list of Q values for each state)
                     # output values: max of q_set - q_hat for given action
 
+                # piece is one-hot encoded
+                piece = [0]*7
+                piece[s.currentShape.shape -1] = 1
+                classifier_states = np.append(classifier_states, [[s_features, piece]])
+
             # learn v_k w/ regressor
-            new_val = svm.LinearSVR(max_iter = 1000)
+            new_val = linear_model.LinearRegression()
             new_val.fit(state_set, val_set)
             curr_val = new_val      # update current value function
+            print(curr_val.coef_)   # prints the weights in the model
 
             # learn new policy w/ classifier
             # input: state, output: set of q_hats (all values for actions of a given set)
             # take min of the output set and get action
-            new_policy = svm.LinearSVC(max_iter = 1000)
-            new_policy.fit(state_set, q_set)
+            new_policy = linear_model.LinearRegression()
+            new_policy.fit(classifier_states, q_set)
 
             # evaluate policy by averaging score over 20 games
             tot_lines = 0
@@ -209,15 +256,14 @@ class TetrisAI(object):
             curr_policy = new_policy
             curr_policy_score = new_policy_score
 
-def main:
+def main():
 
-    init_policy    # policy_1 (arbitrary)
-    init_val      # value_0 function (arbitrary)
-    A = {}      #action set (32 possible actions)...what are these???
+    # A = {}      #action set (32 possible actions)...what are these???
     M = 1
-    N = 100
+    N = 1
     m = 5
-    mpi(A, N, M, m, init_policy, init_val)
+    error_threshold = 0.01
+    mpi(N, M, m, error_threshold)
 
     # load the model from disk
     policy = pickle.load(open('finalized_policy.sav', 'rb'))
