@@ -4,6 +4,7 @@
 import os
 import sys
 import random
+import numpy as np
 
 # from run_model import episode_data
 episode_data = []
@@ -96,6 +97,7 @@ class BoardData(object):
         self.currentDirection = 0
         self.currentShape = Shape()
         episode_data = []
+        self.backBoard2D = None
         self.features = []
 
         self.pieces_consumed = 0
@@ -254,6 +256,7 @@ class BoardData(object):
     
     def getFeatures(self):
         # TODO:
+        self.backBoard2D = np.array(BOARD_DATA.getData()).reshape((BOARD_DATA.height, BOARD_DATA.width))
         self.features = []
         self.features.append(self.getMaxHeight())
         self.features.append(self.countRowTransitions())
@@ -271,7 +274,7 @@ class BoardData(object):
 
         for y in range(height):
             for x in range(width):
-                if self.backBoard[y, x] != 0:
+                if self.backBoard2D[y, x] != 0:
                     return y
 
         return 0
@@ -279,19 +282,19 @@ class BoardData(object):
     def countRowTransitions(self):
         num_transitions = 0
         width = self.width
-        max_height = self.getMaxHeight(self.backBoard)
+        max_height = self.getMaxHeight(self.backBoard2D)
 
         for y in range(self.height-1, max_height-1, -1): # +1 ?
             for x in range(width):
-                cur_cell = self.backBoard[y, x]
+                cur_cell = self.backBoard2D[y, x]
                 if cur_cell == 0:
                     left_cell = None
                     right_cell = None
 
                     if x != 0:
-                        left_cell = self.backBoard[y, x-1]
+                        left_cell = self.backBoard2D[y, x-1]
                     if x != width - 1:
-                        right_cell = self.backBoard[y, x+1]
+                        right_cell = self.backBoard2D[y, x+1]
 
                     if left_cell != 0:
                         num_transitions += 1
@@ -305,15 +308,15 @@ class BoardData(object):
 
         for y in range(height-1, -1, -1):
             for x in range(width):
-                cur_cell = self.backBoard[y, x]
+                cur_cell = self.backBoard2D[y, x]
                 if cur_cell == 0:
                     bottom_cell = None
                     top_cell = None
 
                     if y != 0:
-                        top_cell = self.backBoard[y-1, x]
+                        top_cell = self.backBoard2D[y-1, x]
                     if y != height-1:
-                        bottom_cell = self.backBoard[y+1, x]
+                        bottom_cell = self.backBoard2D[y+1, x]
 
                     if bottom_cell != 0:
                         num_transitions += 1
@@ -329,18 +332,18 @@ class BoardData(object):
 
         for y in range(height-1, -1, -1):
             for x in range(width):
-                cur_cell = self.backBoard[y, x]
+                cur_cell = self.backBoard2D[y, x]
                 if cur_cell == 0:
                     top_cell = None
 
                     if y != 0:
-                        top_cell = self.backBoard[y-1, x]
+                        top_cell = self.backBoard2D[y-1, x]
 
                     if top_cell != 0 and y != 0:
                         num_holes += 1
 
         # print('===================')
-        # print(self.backBoard)
+        # print(self.backBoard2D)
         # print('num holes: ' + str(num_holes))
         # print('===================')
         return num_holes
@@ -353,7 +356,7 @@ class BoardData(object):
         for x in range(width):
             height_found = False
             for y in range(height):
-                if self.backBoard[y, x] != 0:
+                if self.backBoard2D[y, x] != 0:
                     height_found = True
                     heights.append(height - y)
                     break
@@ -368,12 +371,12 @@ class BoardData(object):
         width = self.width
         height = self.height
 
-        heights = self.getColHeights(self.backBoard)
+        heights = self.getColHeights(self.backBoard2D)
         for i in range(len(heights) - 1):
             differences.append(abs(heights[i] - heights[i+1]))
 
         # print('===================')
-        # print(self.backBoard)
+        # print(self.backBoard2D)
         # print('differences: ' + str(differences))
         # print('===================')
         return differences
@@ -383,22 +386,22 @@ class BoardData(object):
         width = self.width
         height = self.height
 
-        heights = self.getColHeights(self.backBoard)
+        heights = self.getColHeights(self.backBoard2D)
         for c in range(len(heights)):
             if c == 0:
-                if self.backBoard[height-heights[c]-1, c+1] != 0:
+                if self.backBoard2D[height-heights[c]-1, c+1] != 0:
                     num_wells += 1
             elif c == len(heights)-1:
-                if self.backBoard[height-heights[c]-1, c-1] != 0:
+                if self.backBoard2D[height-heights[c]-1, c-1] != 0:
                     num_wells += 1
             else:
-                left_cell = self.backBoard[height-heights[c]-1, c-1]
-                right_cell = self.backBoard[height-heights[c]-1, c+1]
+                left_cell = self.backBoard2D[height-heights[c]-1, c-1]
+                right_cell = self.backBoard2D[height-heights[c]-1, c+1]
                 if left_cell != 0 and right_cell != 0:
                     num_wells += 1
 
         # print('===================')
-        # print(self.backBoard)
+        # print(self.backBoard2D)
         # print('num_wells: ' + str(num_wells))
         # print('===================')
         return num_wells
@@ -407,7 +410,7 @@ class BoardData(object):
         count = 0
 
         for y in range(cur_y-1, -1, -1):
-            if self.backBoard[y, cur_x] != 0:
+            if self.backBoard2D[y, cur_x] != 0:
                 count += 1
 
         return count
@@ -417,12 +420,12 @@ class BoardData(object):
         width = self.width
         height = self.height
         
-        heights = self.getColHeights(self.backBoard)
+        heights = self.getColHeights(self.backBoard2D)
         for c in range(len(heights)):
             if heights[c] > 1: # Holes only possible if blocks are at at least height 2
                 for y in range(height-1, -1, -1):
-                    if self.backBoard[y, c] == 0:
-                        hole_depths += self.countCellsAbove(c, y, self.backBoard)
+                    if self.backBoard2D[y, c] == 0:
+                        hole_depths += self.countCellsAbove(c, y, self.backBoard2D)
 
         # print('===================')
         # print(board)
