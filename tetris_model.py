@@ -255,15 +255,15 @@ class BoardData(object):
     def getFeatures(self):
         # TODO:
         self.features = []
-        self.features.append(getMaxHeight())
-        self.features.append(countRowTransitions())
-        self.features.append(countColTransitions())
-        self.features.append(countNumHoles())
-        self.features.append(getColHeights())
-        self.features.append(getHeightDifferences())
-        self.features.append(getNumWells())
-        self.features.append(countCellsAbove())
-        self.features.append(getHoleDepths())
+        self.features.append(self.getMaxHeight())
+        self.features.append(self.countRowTransitions())
+        self.features.append(self.countColTransitions())
+        self.features.append(self.countNumHoles())
+        self.features.append(self.getColHeights())
+        self.features.append(self.getHeightDifferences())
+        self.features.append(self.getNumWells())
+        self.features.append(self.countCellsAbove())
+        self.features.append(self.getHoleDepths())
 
     def getMaxHeight(self):
         width = self.width
