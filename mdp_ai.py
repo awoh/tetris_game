@@ -43,7 +43,7 @@ def nextInitialMove(weights, board):
             score = -sys.maxsize -1
         else:
             lines, new_board = makeMove(a, board)
-            score = calculateReward(weights, getFeatures(board))   # evaluate and add to list
+            score = calculateReward(weights, board.getFeatures())   # evaluate and add to list
         scores = np.append(scores, [score])
 
     best = np.argwhere(scores == np.amax(scores))
@@ -93,10 +93,6 @@ def getRandomState():
 
     return board
 
-def getFeatures(s):
-    feature_array = [1]*35
-    return np.array(feature_array)
-
 def getActionSet(board):
     """
     Determines A based on the board state, A = {(rotation, column)}
@@ -121,11 +117,11 @@ def getAction(board, policy, action_set):
         possible_actions = [i for i in action_set if i[0] > -1]
         rand_i = random.randint(0, len(possible_actions)-1)
         action = possible_actions[rand_i]
-        print(action)
+        # print(action)
     else:
         piece = [0]*7   # one hot encode piece
         piece[board.currentShape.shape -1] = 1
-        tot_features = np.append(getFeatures(board), [piece])
+        tot_features = np.append(board.getFeatures(), [piece])
         action_scores = policy.predict([tot_features])
         best_scores = np.argwhere(action_scores == np.amax(action_scores)).flatten().tolist()
         max_score = np.random.choice(best_scores)
@@ -157,7 +153,7 @@ def rollout(curr_state, steps, curr_val, curr_policy, init_action, action_set, g
     if(curr_val == None):
         v = 0
     else:
-        s_features = getFeatures(curr_state)    # get state, so can predict using model
+        s_features = curr_state.getFeatures()    # get state, so can predict using model
         v = curr_val.predict(s_features)
 
     tot_reward += (gamma**steps) * v # compute the unbiased estimate (v), prev_v based on m moves away from s
@@ -174,7 +170,7 @@ def play(policy):
 
     return game_lines
 
-def mpi(N, M, m, error_threshold, gamma):
+def mpi(N, M, m, error_threshold, gamma, num_evaluations):
     """
     starts with init policy and value and generates a sequence of value-new_policy
     pairs (v_k = evaluation step and policy_k+1 = greedy step)
@@ -185,7 +181,8 @@ def mpi(N, M, m, error_threshold, gamma):
     while not done:
     # for k  in range(idk):
         # at every iteration, build new value function and policy function
-        num_features = 35
+        s = getRandomState()
+        num_features = len(s.features)
         val_features = np.empty((0,num_features))
         val_outputs = np.empty((0,1))
 
@@ -201,7 +198,7 @@ def mpi(N, M, m, error_threshold, gamma):
 
             # generate random initial state by making num_moves number of moves
             s = getRandomState()
-            s_features = getFeatures(s)
+            s_features = s.getFeatures()
             A = getActionSet(s)
 
             # generate rollout for state of size m (go up to m steps away)
@@ -236,21 +233,21 @@ def mpi(N, M, m, error_threshold, gamma):
             piece = [0]*7
             piece[s.currentShape.shape -1] = 1
             tot_features = np.append(s_features, [piece])
-            print("tot_features: ")
-            print(tot_features)
+            # print("tot_features: ")
+            # print(tot_features)
 
             policy_features = np.append(policy_features, np.array([tot_features]), axis=0)
             policy_outputs = np.append(policy_outputs, np.array([state_q]), axis=0)     # output values for classifier (list of Q values for each state)
-            print("policy outputs: ")
-            print(policy_outputs)
+            # print("policy outputs: ")
+            # print(policy_outputs)
         # learn v_k w/ regressor
         new_val = linear_model.LinearRegression()
-        print("value func data: ")
-        print(val_features)
-        print(val_outputs)
+        # print("value func data: ")
+        # print(val_features)
+        # print(val_outputs)
         new_val.fit(val_features, val_outputs)
         curr_val = new_val      # update current value function
-        print(curr_val.coef_)   # prints the weights in the model
+        # print(curr_val.coef_)   # prints the weights in the model
 
         # learn new policy w/ classifier
         # input: state, output: set of q_hats (all values for actions of a given set)
@@ -259,11 +256,11 @@ def mpi(N, M, m, error_threshold, gamma):
 
         # evaluate policy by averaging score over 20 games
         tot_lines = 0
-        for i in range(20):
+        for i in range(num_evaluations):
             num_lines = play(new_policy)
             tot_lines += num_lines
 
-        new_policy_score = tot_lines/20
+        new_policy_score = tot_lines/num_evaluations
         print("policy score: " + str(new_policy_score))
 
         # if curr_policy is approximately new_policy, save policy into file end
@@ -286,7 +283,8 @@ def main():
     m = 5
     gamma = 1
     error_threshold = 0.01
-    mpi(N, M, m, error_threshold, gamma)
+    num_evaluations = 20
+    mpi(N, M, m, error_threshold, gamma, num_evaluations)
 
     # load the model from disk
     policy = pickle.load(open('finalized_policy.sav', 'rb'))
