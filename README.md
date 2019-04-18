@@ -34,6 +34,9 @@
 
 * (probably useless) On the evolution of artificial Tetris players
 
+* (pattern diversity) Distinguishing experts from novices by the Mind’s Hand and Mind’s
+Eye
+
 * (features) Improvements on Learning Tetris with Cross Entropy
 
 * (features) A comparison of feature functions for Tetris strategies
