@@ -257,28 +257,32 @@ class BoardData(object):
         self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
 
     def getFeatures(self):
+        """35 features total """
         # TODO:
         self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
         self.features = []
 
+        # landingHeight
+        # eroded cells
         self.features.append(self.countRowTransitions())
         self.features.append(self.countColTransitions())
         self.features.append(self.countNumHoles())
         self.features.append(self.getNumWells())
         self.features.append(self.getHoleDepths())
+        # rows with holes
 
-        temp_heights = self.getColHeights()
+        temp_heights = self.getColHeights() # 10
         for i in range(len(temp_heights)):
             self.features.append(temp_heights[i])
-        # self.features.append(self.getColHeights())
-        temp_differences = self.getHeightDifferences()
+        temp_differences = self.getHeightDifferences() # 9
         for i in range(len(temp_differences)):
             self.features.append(temp_differences[i])
-        # self.features.append(self.getHeightDifferences())
-
-        # self.features.append(self.countCellsAbove())
 
         self.features.append(self.getMaxHeight())
+        # rbf features (5)
+        # pattern diversity feature ???
+        # constant feature ???
+
 
         return self.features
 

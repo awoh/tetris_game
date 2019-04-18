@@ -87,7 +87,9 @@ def getRandomState():
     board = BoardData()
     board.createNewPiece()  # create initial piece
     for i in range(num_moves):
-        du_policy = [-9.22,-19.77,-13.08,-10.49,-1.61]
+        # [land_height, eroded_cells, row_transitions, Col_transitions, holes, wells, hole depth, rows w/holes]
+        du_policy = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04]
+        # maybe fill in rest with 0 values so du_policy is of same length as features of board
         next_move = nextInitialMove(du_policy, board)
         lines, board = makeMove(next_move, board)
     # print(board.backBoard2D)
