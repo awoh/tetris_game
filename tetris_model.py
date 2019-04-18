@@ -262,11 +262,16 @@ class BoardData(object):
         self.features.append(self.countRowTransitions())
         self.features.append(self.countColTransitions())
         self.features.append(self.countNumHoles())
-        self.features.append(self.getColHeights())
+        temp_heights = self.getColHeights()
+        for i in range(len(temp_heights)):
+            self.features.append(temp_heights[i])
+        # self.features.append(self.getColHeights())
         self.features.append(self.getHeightDifferences())
         self.features.append(self.getNumWells())
-        self.features.append(self.countCellsAbove())
+        # self.features.append(self.countCellsAbove())
         self.features.append(self.getHoleDepths())
+
+        return self.features
 
     def getMaxHeight(self):
         width = self.width
@@ -300,6 +305,8 @@ class BoardData(object):
                         num_transitions += 1
                     if right_cell != 0:
                         num_transitions += 1
+        
+        return num_transitions
 
     def countColTransitions(self):
         num_transitions = 0
