@@ -90,12 +90,13 @@ class BoardData(object):
     def __init__(self):
         self.backBoard = [0] * BoardData.width * BoardData.height
 
+        self.height_of_last_piece = 22
         self.currentX = -1
         self.currentY = -1
         self.currentDirection = 0
         self.currentShape = Shape()
         episode_data = []
-        print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+        self.features = []
 
         self.pieces_consumed = 0
 
@@ -232,9 +233,13 @@ class BoardData(object):
         return lines
 
     def mergePiece(self):
+        min_y = 22
         for x, y in self.currentShape.getCoords(self.currentDirection, self.currentX, self.currentY):
+            if y < min_y:
+                min_y = y
             self.backBoard[x + y * BoardData.width] = self.currentShape.shape
 
+        self.height_of_last_piece = min_y
         self.currentX = -1
         self.currentY = -1
         self.currentDirection = 0
@@ -246,6 +251,184 @@ class BoardData(object):
         self.currentDirection = 0
         self.currentShape = Shape()
         self.backBoard = [0] * BoardData.width * BoardData.height
+    
+    def getFeatures(self):
+        # TODO:
+        self.features = []
+        self.features.append(getMaxHeight())
+        self.features.append(countRowTransitions())
+        self.features.append(countColTransitions())
+        self.features.append(countNumHoles())
+        self.features.append(getColHeights())
+        self.features.append(getHeightDifferences())
+        self.features.append(getNumWells())
+        self.features.append(countCellsAbove())
+        self.features.append(getHoleDepths())
+
+    def getMaxHeight(self):
+        width = self.width
+        height = self.height
+
+        for y in range(height):
+            for x in range(width):
+                if backBoard[y, x] != 0:
+                    return y
+
+        return 0
+
+    def countRowTransitions(self):
+        num_transitions = 0
+        width = self.width
+        max_height = self.getMaxHeight(backBoard)
+
+        for y in range(self.height-1, max_height-1, -1): # +1 ?
+            for x in range(width):
+                cur_cell = backBoard[y, x]
+                if cur_cell == 0:
+                    left_cell = None
+                    right_cell = None
+
+                    if x != 0:
+                        left_cell = backBoard[y, x-1]
+                    if x != width - 1:
+                        right_cell = backBoard[y, x+1]
+
+                    if left_cell != 0:
+                        num_transitions += 1
+                    if right_cell != 0:
+                        num_transitions += 1
+
+    def countColTransitions(self):
+        num_transitions = 0
+        width = self.width
+        height = self.height
+
+        for y in range(height-1, -1, -1):
+            for x in range(width):
+                cur_cell = backBoard[y, x]
+                if cur_cell == 0:
+                    bottom_cell = None
+                    top_cell = None
+
+                    if y != 0:
+                        top_cell = backBoard[y-1, x]
+                    if y != height-1:
+                        bottom_cell = backBoard[y+1, x]
+
+                    if bottom_cell != 0:
+                        num_transitions += 1
+                    if top_cell != 0 and y != 0:
+                        num_transitions += 1
+
+        return num_transitions
+
+    def countNumHoles(self):
+        num_holes = 0
+        width = self.width
+        height = self.height
+
+        for y in range(height-1, -1, -1):
+            for x in range(width):
+                cur_cell = backBoard[y, x]
+                if cur_cell == 0:
+                    top_cell = None
+
+                    if y != 0:
+                        top_cell = backBoard[y-1, x]
+
+                    if top_cell != 0 and y != 0:
+                        num_holes += 1
+
+        # print('===================')
+        # print(backBoard)
+        # print('num holes: ' + str(num_holes))
+        # print('===================')
+        return num_holes
+
+    def getColHeights(self):
+        heights = []
+        width = self.width
+        height = self.height
+
+        for x in range(width):
+            height_found = False
+            for y in range(height):
+                if backBoard[y, x] != 0:
+                    height_found = True
+                    heights.append(height - y)
+                    break
+            if not height_found:
+                heights.append(0)
+
+        return heights
+
+    def getHeightDifferences(self):
+        # Could be combined with getColHeights() to save a tiny bit of time
+        differences = []
+        width = self.width
+        height = self.height
+
+        heights = self.getColHeights(backBoard)
+        for i in range(len(heights) - 1):
+            differences.append(abs(heights[i] - heights[i+1]))
+
+        # print('===================')
+        # print(backBoard)
+        # print('differences: ' + str(differences))
+        # print('===================')
+        return differences
+
+    def getNumWells(self):
+        num_wells = 0
+        width = self.width
+        height = self.height
+
+        heights = self.getColHeights(backBoard)
+        for c in range(len(heights)):
+            if c == 0:
+                if backBoard[height-heights[c]-1, c+1] != 0:
+                    num_wells += 1
+            elif c == len(heights)-1:
+                if backBoard[height-heights[c]-1, c-1] != 0:
+                    num_wells += 1
+            else:
+                left_cell = backBoard[height-heights[c]-1, c-1]
+                right_cell = backBoard[height-heights[c]-1, c+1]
+                if left_cell != 0 and right_cell != 0:
+                    num_wells += 1
+
+        # print('===================')
+        # print(backBoard)
+        # print('num_wells: ' + str(num_wells))
+        # print('===================')
+        return num_wells
+
+    def countCellsAbove(self, cur_x, cur_y):
+        count = 0
+
+        for y in range(cur_y-1, -1, -1):
+            if backBoard[y, cur_x] != 0:
+                count += 1
+
+        return count
+
+    def getHoleDepths(self):
+        hole_depths = 0
+        width = self.width
+        height = self.height
+        
+        heights = self.getColHeights(backBoard)
+        for c in range(len(heights)):
+            if heights[c] > 1: # Holes only possible if blocks are at at least height 2
+                for y in range(height-1, -1, -1):
+                    if backBoard[y, c] == 0:
+                        hole_depths += self.countCellsAbove(c, y, backBoard)
+
+        # print('===================')
+        # print(board)
+        # print('hole_depths: ' + str(hole_depths))
+        # print('===================')
+        return hole_depths
 
 
 BOARD_DATA = BoardData()
