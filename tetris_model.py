@@ -253,7 +253,7 @@ class BoardData(object):
         self.currentDirection = 0
         self.currentShape = Shape()
         self.backBoard = [0] * BoardData.width * BoardData.height
-    
+
     def getFeatures(self):
         # TODO:
         self.backBoard2D = np.array(BOARD_DATA.getData()).reshape((BOARD_DATA.height, BOARD_DATA.width))
@@ -308,7 +308,7 @@ class BoardData(object):
                         num_transitions += 1
                     if right_cell != 0:
                         num_transitions += 1
-        
+
         return num_transitions
 
     def countColTransitions(self):
@@ -429,7 +429,7 @@ class BoardData(object):
         hole_depths = 0
         width = self.width
         height = self.height
-        
+
         heights = self.getColHeights()
         for c in range(len(heights)):
             if heights[c] > 1: # Holes only possible if blocks are at at least height 2

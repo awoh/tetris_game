@@ -90,6 +90,7 @@ def getRandomState():
         policy = [1]*7
         next_move = nextInitialMove(policy, board)
         lines, board = makeMove(next_move, board)
+        print(i)
 
     return board
 
@@ -182,6 +183,7 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
     # for k  in range(idk):
         # at every iteration, build new value function and policy function
         s = getRandomState()
+        # print(s.getFeatures())
         num_features = len(s.features)
         val_features = np.empty((0,num_features))
         val_outputs = np.empty((0,1))
@@ -279,7 +281,7 @@ def main():
 
     # A = {}      #action set (32 possible actions)...what are these???
     M = 1
-    N = 100
+    N = 5
     m = 5
     gamma = 1
     error_threshold = 0.01
