@@ -282,7 +282,7 @@ class BoardData(object):
     def countRowTransitions(self):
         num_transitions = 0
         width = self.width
-        max_height = self.getMaxHeight(self.backBoard2D)
+        max_height = self.getMaxHeight()
 
         for y in range(self.height-1, max_height-1, -1): # +1 ?
             for x in range(width):
@@ -371,7 +371,7 @@ class BoardData(object):
         width = self.width
         height = self.height
 
-        heights = self.getColHeights(self.backBoard2D)
+        heights = self.getColHeights()
         for i in range(len(heights) - 1):
             differences.append(abs(heights[i] - heights[i+1]))
 
@@ -386,7 +386,7 @@ class BoardData(object):
         width = self.width
         height = self.height
 
-        heights = self.getColHeights(self.backBoard2D)
+        heights = self.getColHeights()
         for c in range(len(heights)):
             if c == 0:
                 if self.backBoard2D[height-heights[c]-1, c+1] != 0:
@@ -420,7 +420,7 @@ class BoardData(object):
         width = self.width
         height = self.height
         
-        heights = self.getColHeights(self.backBoard2D)
+        heights = self.getColHeights()
         for c in range(len(heights)):
             if heights[c] > 1: # Holes only possible if blocks are at at least height 2
                 for y in range(height-1, -1, -1):
