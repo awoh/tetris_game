@@ -97,7 +97,7 @@ class BoardData(object):
         self.currentDirection = 0
         self.currentShape = Shape()
         episode_data = []
-        self.backBoard2D = None
+        self.backBoard2D = [[0]*BoardData.width]*BoardData.height
         self.features = []
 
         self.pieces_consumed = 0
@@ -253,15 +253,20 @@ class BoardData(object):
         self.currentDirection = 0
         self.currentShape = Shape()
         self.backBoard = [0] * BoardData.width * BoardData.height
+    def update2DBoard(self):
+        self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
 
     def getFeatures(self):
         # TODO:
-        self.backBoard2D = np.array(BOARD_DATA.getData()).reshape((BOARD_DATA.height, BOARD_DATA.width))
+        self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
         self.features = []
-        self.features.append(self.getMaxHeight())
+
         self.features.append(self.countRowTransitions())
         self.features.append(self.countColTransitions())
         self.features.append(self.countNumHoles())
+        self.features.append(self.getNumWells())
+        self.features.append(self.getHoleDepths())
+
         temp_heights = self.getColHeights()
         for i in range(len(temp_heights)):
             self.features.append(temp_heights[i])
@@ -270,9 +275,10 @@ class BoardData(object):
         for i in range(len(temp_differences)):
             self.features.append(temp_differences[i])
         # self.features.append(self.getHeightDifferences())
-        self.features.append(self.getNumWells())
+
         # self.features.append(self.countCellsAbove())
-        self.features.append(self.getHoleDepths())
+
+        self.features.append(self.getMaxHeight())
 
         return self.features
 
@@ -435,7 +441,7 @@ class BoardData(object):
             if heights[c] > 1: # Holes only possible if blocks are at at least height 2
                 for y in range(height-1, -1, -1):
                     if self.backBoard2D[y, c] == 0:
-                        hole_depths += self.countCellsAbove(c, y, self.backBoard2D)
+                        hole_depths += self.countCellsAbove(c, y)
 
         # print('===================')
         # print(board)

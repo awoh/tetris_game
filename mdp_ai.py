@@ -83,15 +83,14 @@ def getRandomState():
     Creates initial random state for training
     """
     # let regular tetris_ai calculateScore get random initial moves for state in D
-    num_moves = random.randint(5,15)    # number of moves to make when creating init state
+    num_moves = random.randint(1,3)    # number of moves to make when creating init state
     board = BoardData()
     board.createNewPiece()  # create initial piece
     for i in range(num_moves):
-        policy = [1]*7
-        next_move = nextInitialMove(policy, board)
+        du_policy = [-9.22,-19.77,-13.08,-10.49,-1.61]
+        next_move = nextInitialMove(du_policy, board)
         lines, board = makeMove(next_move, board)
-        print(i)
-
+    # print(board.backBoard2D)
     return board
 
 def getActionSet(board):
@@ -115,10 +114,11 @@ def getAction(board, policy, action_set):
     """
     # if policy doesn't exist yet, choose action randomly, else get from policy model
     if policy == None:
-        possible_actions = [i for i in action_set if i[0] > -1]
-        rand_i = random.randint(0, len(possible_actions)-1)
-        action = possible_actions[rand_i]
-        # print(action)
+        valid_actions = [i for i in action_set if i[0] > -1]
+        if len(valid_actions) == 0:
+            return (-1,-1,0)
+        rand_i = random.randint(0, len(valid_actions)-1)
+        action = valid_actions[rand_i]
     else:
         piece = [0]*7   # one hot encode piece
         piece[board.currentShape.shape -1] = 1
@@ -129,7 +129,7 @@ def getAction(board, policy, action_set):
         action =  action_set[max_score]
     return action
 
-def rollout(curr_state, steps, curr_val, curr_policy, init_action, action_set, gamma):
+def rollout(curr_state, steps, curr_val, curr_policy, init_action, gamma):
     """
     Generate rollout for a given state (goes steps number of actions into future)
     Returns the total reward for the rollout
@@ -143,7 +143,9 @@ def rollout(curr_state, steps, curr_val, curr_policy, init_action, action_set, g
         if i == 0:
             next_move = init_action
         else:
-            next_move = getAction(curr_state, curr_policy, action_set)
+            next_move = getAction(curr_state, curr_policy, getActionSet(curr_state))
+            if next_move == (-1,-1,0):
+                break   # if exhausted all potential actions and game is over
 
         curr_reward, curr_state = makeMove(next_move, curr_state)    # make move, cur_reward = lines cleared by action
 
@@ -177,14 +179,14 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
     pairs (v_k = evaluation step and policy_k+1 = greedy step)
     """
     done = False
-    curr_policy_score = 0
+    curr_policy_score = 1
     # i don't know what k is... maybe just do while not done (until new_policy = curr_policy)
     while not done:
     # for k  in range(idk):
         # at every iteration, build new value function and policy function
         s = getRandomState()
         # print(s.getFeatures())
-        num_features = len(s.features)
+        num_features = len(s.getFeatures())
         val_features = np.empty((0,num_features))
         val_outputs = np.empty((0,1))
 
@@ -205,7 +207,7 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
 
             # generate rollout for state of size m (go up to m steps away)
             action = getAction(s, curr_policy, A)
-            v_hat = rollout(s, m, curr_val, curr_policy, action, A, gamma)
+            v_hat = rollout(s, m, curr_val, curr_policy, action, gamma)
 
             # add (s, v) to training set for regressor (x = state_set, y = val_set)
             # s is represented by the features determined in board
@@ -225,7 +227,7 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
                 # build M rollouts  (get rewards for all future states (1 -> m+1))
                 for i in range(M):
                     # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
-                    R = rollout(s, m+1, curr_val, curr_policy, a, A, gamma)
+                    R = rollout(s, m+1, curr_val, curr_policy, a, gamma)
                     tot_Q += R
 
                 Q_hat = tot_Q / M   # calculate Q_hat
@@ -235,18 +237,13 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
             piece = [0]*7
             piece[s.currentShape.shape -1] = 1
             tot_features = np.append(s_features, [piece])
-            # print("tot_features: ")
-            # print(tot_features)
 
             policy_features = np.append(policy_features, np.array([tot_features]), axis=0)
             policy_outputs = np.append(policy_outputs, np.array([state_q]), axis=0)     # output values for classifier (list of Q values for each state)
-            # print("policy outputs: ")
-            # print(policy_outputs)
+
         # learn v_k w/ regressor
+        print(val_outputs)
         new_val = linear_model.LinearRegression()
-        # print("value func data: ")
-        # print(val_features)
-        # print(val_outputs)
         new_val.fit(val_features, val_outputs)
         curr_val = new_val      # update current value function
         # print(curr_val.coef_)   # prints the weights in the model
@@ -275,7 +272,8 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
 
         # update current policy function and score
         curr_policy = new_policy
-        curr_policy_score = new_policy_score
+        if policy_change > 0:
+            curr_policy_score = new_policy_score
 
 def main():
 
