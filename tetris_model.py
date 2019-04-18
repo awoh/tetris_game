@@ -266,7 +266,10 @@ class BoardData(object):
         for i in range(len(temp_heights)):
             self.features.append(temp_heights[i])
         # self.features.append(self.getColHeights())
-        self.features.append(self.getHeightDifferences())
+        temp_differences = self.getHeightDifferences()
+        for i in range(len(temp_differences)):
+            self.features.append(temp_differences[i])
+        # self.features.append(self.getHeightDifferences())
         self.features.append(self.getNumWells())
         # self.features.append(self.countCellsAbove())
         self.features.append(self.getHoleDepths())
