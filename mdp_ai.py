@@ -27,14 +27,53 @@ import random
 # evaluation function to evaluate all states:
     # f is defined as linear combo of set of features, phi
     # f(.) = phi * (.) * theta, theta = parameter vector (policy/controller)
-def nextInitialMove(weights, board):
+def calculateLinesCleared(s, board, rotation, column):
+    # print('calculateScore')
+    t1 = datetime.now()
+    width = board.width
+    height = board.height
+    dropDown(s, board, s.currentShape, rotation, column)
+
+    # self.dropDownByDist(board, board.currentShape, rotation, column, dropDist[x1])
+    # print(datetime.now() - t1)
+
+    # Term 1: lines to be removed
+    fullLines, nearFullLines = 0, 0
+    roofY = [0] * width
+    holeCandidates = [0] * width
+    holeConfirm = [0] * width
+    vHoles, vBlocks = 0, 0
+    for y in range(height - 1, -1, -1):
+        hasHole = False
+        hasBlock = False
+        for x in range(width):
+            if step1Board[y, x] == Shape.shapeNone:
+                hasHole = True
+                holeCandidates[x] += 1
+            else:
+                hasBlock = True
+                roofY[x] = height - y
+                if holeCandidates[x] > 0:
+                    holeConfirm[x] += holeCandidates[x]
+                    holeCandidates[x] = 0
+                if holeConfirm[x] > 0:
+                    vBlocks += 1
+        if not hasBlock:
+            break
+        if not hasHole and hasBlock:
+            fullLines += 1
+    return fullLines
+
+def nextInitialMove(weights, s):
     """
     Return the next move for the board.
     Used for generating the initial states
     Initially use the weights provided in the DU controller from other paper as policy
     Maybe change this after it learns some...
     """
-    action_set = getActionSet(board)
+    # print("shape: " + str(s.currentShape.shape))
+    # print("min y start: " + str(s.currentY))
+    action_set = getActionSet(s)
     scores = np.array([])
     for a in action_set:
         # do action
@@ -42,10 +81,18 @@ def nextInitialMove(weights, board):
         if a == (-1,-1, 0):
             score = -sys.maxsize -1
         else:
-            lines, new_board = makeMove(a, board)
-            score = calculateReward(weights, board.getFeatures())   # evaluate and add to list
+            # board = np.array(s.getData()).reshape((s.height, s.width))
+
+            # miny = dropDown(s, board, s.currentShape, a[0], a[1])
+            future_feats = s.getFeatures(a, True)
+            # print(future_feats)
+
+            # lines = calculateLinesCleared(s, board, a[0], a[1])
+            score = calculateReward(weights, future_feats)   # evaluate and add to list
         scores = np.append(scores, [score])
 
+    # print(action_set)
+    print(scores)
     best = np.argwhere(scores == np.amax(scores))
     best = best.flatten().tolist()
     max = np.random.choice(best)
@@ -76,23 +123,27 @@ def makeMove(next_move, board):
         k += 1
 
     lines = board.dropDown()    # creates new piece after moving down
-    return lines, board
+    print("landing height: " + str(board.getFeatures()[0]))
+    return lines
 
 def getRandomState():
     """
     Creates initial random state for training
     """
     # let regular tetris_ai calculateScore get random initial moves for state in D
-    num_moves = random.randint(1,3)    # number of moves to make when creating init state
+    num_moves = random.randint(5,15)    # number of moves to make when creating init state
     board = BoardData()
     board.createNewPiece()  # create initial piece
+    print("num moves: " + str(num_moves))
     for i in range(num_moves):
         # [land_height, eroded_cells, row_transitions, Col_transitions, holes, wells, hole depth, rows w/holes]
         du_policy = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04]
         # maybe fill in rest with 0 values so du_policy is of same length as features of board
+        # print(board.backBoard2D)
         next_move = nextInitialMove(du_policy, board)
-        lines, board = makeMove(next_move, board)
-    # print(board.backBoard2D)
+        # print(board.backBoard2D)
+        print("next move: " + str(next_move))
+        lines = makeMove(next_move, board)
     return board
 
 def getActionSet(board):
@@ -104,8 +155,10 @@ def getActionSet(board):
     A = list()  # r = rotation, c = column
     for r in range(4):
         for c in range(10):
-            if(board.tryMoveCurrent(r, c, 0)):
-                A.append((r,c,0)) # add to set
+            # minX, maxX, minY, maxY = board.nextShape.getBoundingOffsets(0)
+            minX, maxX, minY, maxY = board.currentShape.getBoundingOffsets(r)
+            if(board.tryMoveCurrent(r, c, -minY)):
+                A.append((r,c, -minY)) # add to set
             else:
                 A.append((-1,-1,0))
     return A
@@ -149,7 +202,7 @@ def rollout(curr_state, steps, curr_val, curr_policy, init_action, gamma):
             if next_move == (-1,-1,0):
                 break   # if exhausted all potential actions and game is over
 
-        curr_reward, curr_state = makeMove(next_move, curr_state)    # make move, cur_reward = lines cleared by action
+        curr_reward = makeMove(next_move, curr_state)    # make move, cur_reward = lines cleared by action
 
         # curr_reward = calculateReward(curr_state), curr_reward is the immediate reward (score, ie # lines cleared)
         tot_reward += (gamma**i) * curr_reward    # add gamma*reward to sum of rewards
@@ -170,7 +223,7 @@ def play(policy):
     while board.createNewPiece():
         A = getActionSet(board)
         next_move = getAction(board, policy, A)
-        lines, board = makeMove(next_move, board)
+        lines = makeMove(next_move, board)
         game_lines += lines
 
     return game_lines
@@ -187,7 +240,9 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
     # for k  in range(idk):
         # at every iteration, build new value function and policy function
         s = getRandomState()
-        # print(s.getFeatures())
+        print(s.backBoard2D)
+        print(s.getFeatures())
+        break
         num_features = len(s.getFeatures())
         val_features = np.empty((0,num_features))
         val_outputs = np.empty((0,1))
