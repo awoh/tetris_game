@@ -253,7 +253,6 @@ class BoardData(object):
             self.backBoard[x + y * BoardData.width] = self.currentShape.shape
             self.last_piece_drop_coords.append((x,y)) # tracks position of dropped piece
         
-
         self.height_of_last_piece = min_y
         self.currentX = -1
         self.currentY = -1
@@ -355,6 +354,7 @@ class BoardData(object):
 
 
         # pattern diversity feature ???
+        self.countPatternDiversity()
 
         # rbf features (5)
         for i in range(5):
@@ -364,6 +364,29 @@ class BoardData(object):
             self.features.append(rbf_height)
 
         return self.features
+
+    def countPatternDiversity(self):
+        diversity_count = 0
+        width = self.width
+        height = self.height
+
+        string_rows = []
+        board_copy_2D = np.array(self.backBoard).reshape((self.height, self.width))
+        for row in board_copy_2D:
+            string_rows.append(''.join(str(x) for x in row))
+
+        # Check unique rows
+        diversity_count += len(set(string_rows))
+        # Check unique columns
+        string_cols = []
+        for x in range(width):
+            temp = ''
+            for y in range(height):
+                temp += str(board_copy_2D[y][x])
+            string_cols.append(temp)
+        diversity_count += len(set(string_cols))
+
+        return diversity_count
 
     def countRowsWithHoles(self):
         num_rows = 0
