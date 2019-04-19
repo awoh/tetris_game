@@ -102,6 +102,7 @@ class BoardData(object):
         self.features = []
         self.num_last_lines_cleared = 0
         self.num_last_piece_cleared = 0
+        self.last_piece_drop_coords = []
 
         self.pieces_consumed = 0
 
@@ -232,6 +233,11 @@ class BoardData(object):
                     newBackBoard[x + newY * BoardData.width] = self.backBoard[x + y * BoardData.width]
                 newY -= 1
             else:
+                # Count the eroded pieces
+                for coord in self.last_piece_drop_coords:
+                    if coord[1] == y:
+                        self.num_last_piece_cleared += 1
+
                 lines += 1
         if lines > 0:
             self.backBoard = newBackBoard
@@ -240,10 +246,13 @@ class BoardData(object):
 
     def mergePiece(self):
         min_y = 22
+        self.last_piece_drop_coords = []
         for x, y in self.currentShape.getCoords(self.currentDirection, self.currentX, self.currentY):
             if y < min_y:
                 min_y = y
             self.backBoard[x + y * BoardData.width] = self.currentShape.shape
+            self.last_piece_drop_coords.append((x,y)) # tracks position of dropped piece
+        
 
         self.height_of_last_piece = min_y
         self.currentX = -1
