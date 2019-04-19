@@ -101,6 +101,7 @@ class BoardData(object):
         self.backBoard2D = [[0]*BoardData.width]*BoardData.height
         self.features = []
         self.num_last_lines_cleared = 0
+        self.num_last_piece_cleared = 0
 
         self.pieces_consumed = 0
 
@@ -319,22 +320,12 @@ class BoardData(object):
         # TODO:
 
         self.features = []
-
-        # if future:
-        #     board = np.array(self.getData()).reshape((self.height, self.width))
-        #     lastH = self.dropFutureDown(board, self.currentShape, action[0], action[1])
-        #     lines_cleared = self.calculateFutureLines(board, action[0], action[1])
-
-        # else:
-            # lastH = self.height_of_last_piece
         self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
-        # board = self.backBoard2D
-            # lines_cleared = self.num_last_lines_cleared
 
 
         # DU FEATURES
         self.features.append(self.height -self.height_of_last_piece)     # landingHeight
-        self.features.append(self.getErodedPieceCells())    # eroded cells
+        self.features.append(self.num_last_lines_cleared*self.num_last_piece_cleared)    # eroded cells
         self.features.append(self.countRowTransitions())
         self.features.append(self.countColTransitions())
         self.features.append(self.countNumHoles()) #DOES EACH EMPTY COVERED CELL COUNT AS A UNIQUE HOLE?????
@@ -364,11 +355,6 @@ class BoardData(object):
             self.features.append(rbf_height)
 
         return self.features
-
-    def getErodedPieceCells(self):
-        # (Number of rows eliminated in the last move) × (Number of bricks eliminated from the last piece added)
-
-        return self.num_last_lines_cleared
 
     def countRowsWithHoles(self):
         num_rows = 0
