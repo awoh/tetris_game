@@ -13,7 +13,7 @@ from sklearn import linear_model, svm
 import sys
 import pickle
 import random
-
+import copy
 
 
 # each game, AI does a random # of random moves in beginning
@@ -27,42 +27,27 @@ import random
 # evaluation function to evaluate all states:
     # f is defined as linear combo of set of features, phi
     # f(.) = phi * (.) * theta, theta = parameter vector (policy/controller)
-def calculateLinesCleared(s, board, rotation, column):
-    # print('calculateScore')
-    t1 = datetime.now()
-    width = board.width
-    height = board.height
-    dropDown(s, board, s.currentShape, rotation, column)
+def copyState(s):
+    new_s = BoardData()
+    new_s.backBoard = s.backBoard.copy()
+    new_s.height_of_last_piece = s.height_of_last_piece
+    new_s.currentX = s.currentX
+    new_s.currentY = s.currentY
+    new_s.currentDirection = s.currentDirection
+    new_s.currentShape = s.currentShape
+    episode_data = []
 
-    # self.dropDownByDist(board, board.currentShape, rotation, column, dropDist[x1])
-    # print(datetime.now() - t1)
+    new_s.backBoard2D = copy.deepcopy(s.backBoard2D)
+    new_s.features = s.features.copy()
+    new_s.num_last_lines_cleared = s.num_last_lines_cleared
 
-    # Term 1: lines to be removed
-    fullLines, nearFullLines = 0, 0
-    roofY = [0] * width
-    holeCandidates = [0] * width
-    holeConfirm = [0] * width
-    vHoles, vBlocks = 0, 0
-    for y in range(height - 1, -1, -1):
-        hasHole = False
-        hasBlock = False
-        for x in range(width):
-            if step1Board[y, x] == Shape.shapeNone:
-                hasHole = True
-                holeCandidates[x] += 1
-            else:
-                hasBlock = True
-                roofY[x] = height - y
-                if holeCandidates[x] > 0:
-                    holeConfirm[x] += holeCandidates[x]
-                    holeCandidates[x] = 0
-                if holeConfirm[x] > 0:
-                    vBlocks += 1
-        if not hasBlock:
-            break
-        if not hasHole and hasBlock:
-            fullLines += 1
-    return fullLines
+    new_s.pieces_consumed = s.pieces_consumed
+
+    new_s.shape_queue = s.shape_queue.copy()
+    new_s.nextShape = s.nextShape
+
+    new_s.shapeStat = s.shapeStat.copy()
+    return new_s
 
 def nextInitialMove(weights, s):
     """
@@ -84,7 +69,9 @@ def nextInitialMove(weights, s):
             # board = np.array(s.getData()).reshape((s.height, s.width))
 
             # miny = dropDown(s, board, s.currentShape, a[0], a[1])
-            future_feats = s.getFeatures(a, True)
+            copy_state = copyState(s)
+            lines = makeMove(a, copy_state)
+            future_feats = copy_state.getFeatures()
             # print(future_feats)
 
             # lines = calculateLinesCleared(s, board, a[0], a[1])
@@ -124,7 +111,7 @@ def makeMove(next_move, board):
 
     lines = board.dropDown()    # creates new piece after moving down
     # update board features
-    board.getFeatures()     # I DON'T GET WHY THIS IS NEEDED.....!!!
+    board.update2DBoard()
     # print("landing height: " + str(board.getFeatures()[0]))
     return lines
 
@@ -186,13 +173,14 @@ def getAction(board, policy, action_set):
         action =  action_set[max_score]
     return action
 
-def rollout(curr_state, steps, curr_val, curr_policy, init_action, gamma):
+def rollout(s, steps, curr_val, curr_policy, init_action, gamma):
     """
     Generate rollout for a given state (goes steps number of actions into future)
     Returns the total reward for the rollout
     """
     tot_reward = 0
     curr_reward = 0 # PROBABLY SHOULD CHANGE???????????
+    curr_state = copyState(s)       #make a copy of the state
 
     # need to go from 0 to m-1, m is an upper bound (since game may end earlier)
     for i in range(steps):
@@ -205,6 +193,7 @@ def rollout(curr_state, steps, curr_val, curr_policy, init_action, gamma):
                 break   # if exhausted all potential actions and game is over
 
         curr_reward = makeMove(next_move, curr_state)    # make move, cur_reward = lines cleared by action
+        # CAN'T CALL MAKE MOVE HERE...WILL MODIFY BOARD...
 
         # curr_reward = calculateReward(curr_state), curr_reward is the immediate reward (score, ie # lines cleared)
         tot_reward += (gamma**i) * curr_reward    # add gamma*reward to sum of rewards
@@ -242,8 +231,9 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
     # for k  in range(idk):
         # at every iteration, build new value function and policy function
         s = getRandomState()
-        # print(s.backBoard2D)
-        # print(s.getFeatures())
+        print(s.backBoard2D)
+        print(s.getFeatures()[6])
+        break
 
         num_features = len(s.getFeatures())
         val_features = np.empty((0,num_features))

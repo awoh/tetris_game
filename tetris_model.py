@@ -100,6 +100,7 @@ class BoardData(object):
         episode_data = []
         self.backBoard2D = [[0]*BoardData.width]*BoardData.height
         self.features = []
+        self.num_last_lines_cleared = 0
 
         self.pieces_consumed = 0
 
@@ -233,6 +234,7 @@ class BoardData(object):
                 lines += 1
         if lines > 0:
             self.backBoard = newBackBoard
+        self.num_last_lines_cleared = lines
         return lines
 
     def mergePiece(self):
@@ -258,60 +260,97 @@ class BoardData(object):
     def update2DBoard(self):
         self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
 
-    def dropFutureDown(self, data, shape, direction, x0):
-        dy = self.height - 1
-        for x, y in shape.getCoords(direction, x0, 0):
-            yy = 0
-            while yy + y < self.height and (yy + y < 0 or data[(y + yy), x] == Shape.shapeNone):
-                yy += 1
-            yy -= 1
-            if yy < dy:
-                dy = yy
-        # print('dropDown: shape {0}, direction {1}, x0 {2}, dy {3}'.format(shape.shape, direction, x0, dy))
+    # def dropFutureDown(self, data, shape, direction, x0):
+    #     dy = self.height - 1
+    #     for x, y in shape.getCoords(direction, x0, 0):
+    #         yy = 0
+    #         while yy + y < self.height and (yy + y < 0 or data[(y + yy), x] == Shape.shapeNone):
+    #             yy += 1
+    #         yy -= 1
+    #         if yy < dy:
+    #             dy = yy
+    #     # print('dropDown: shape {0}, direction {1}, x0 {2}, dy {3}'.format(shape.shape, direction, x0, dy))
+    #
+    #     self.dropDownByDist(data, shape, direction, x0, dy)
+    #     return dy
+    #
+    # def dropDownByDist(self, data, shape, direction, x0, dist):
+    #     for x, y in shape.getCoords(direction, x0, 0):
+    #         data[y + dist, x] = shape.shape
+    #
+    # def calculateFutureLines(self, board, rotation, column):
+    #     # print('calculateScore')
+    #     t1 = datetime.now()
+    #     width = self.width
+    #     height = self.height
+    #
+    #     # self.dropDownByDist(board, board.currentShape, rotation, column, dropDist[x1])
+    #     # print(datetime.now() - t1)
+    #
+    #     # Term 1: lines to be removed
+    #     fullLines, nearFullLines = 0, 0
+    #     roofY = [0] * width
+    #     holeCandidates = [0] * width
+    #     holeConfirm = [0] * width
+    #     vHoles, vBlocks = 0, 0
+    #     for y in range(height - 1, -1, -1):
+    #         hasHole = False
+    #         hasBlock = False
+    #         for x in range(width):
+    #             if board[y, x] == Shape.shapeNone:
+    #                 hasHole = True
+    #                 holeCandidates[x] += 1
+    #             else:
+    #                 hasBlock = True
+    #                 roofY[x] = height - y
+    #                 if holeCandidates[x] > 0:
+    #                     holeConfirm[x] += holeCandidates[x]
+    #                     holeCandidates[x] = 0
+    #                 if holeConfirm[x] > 0:
+    #                     vBlocks += 1
+    #         if not hasBlock:
+    #             break
+    #         if not hasHole and hasBlock:
+    #             fullLines += 1
+    #     return fullLines
 
-        self.dropDownByDist(data, shape, direction, x0, dy)
-        return dy
-
-    def dropDownByDist(self, data, shape, direction, x0, dist):
-        for x, y in shape.getCoords(direction, x0, 0):
-            data[y + dist, x] = shape.shape
-
-
-    def getFeatures(self, action=(-1,-1,0), future=False):
+    def getFeatures(self):
         """35 features total """
         # TODO:
 
         self.features = []
 
-        if future:
-            board = np.array(self.getData()).reshape((self.height, self.width))
-            lastH = self.dropFutureDown(board, self.currentShape, action[0], action[1])
+        # if future:
+        #     board = np.array(self.getData()).reshape((self.height, self.width))
+        #     lastH = self.dropFutureDown(board, self.currentShape, action[0], action[1])
+        #     lines_cleared = self.calculateFutureLines(board, action[0], action[1])
 
-        else:
-            lastH = self.height_of_last_piece
-            self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
-            board = self.backBoard2D
+        # else:
+            # lastH = self.height_of_last_piece
+        self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
+        # board = self.backBoard2D
+            # lines_cleared = self.num_last_lines_cleared
 
 
         # DU FEATURES
-        self.features.append(self.height -lastH)     # landingHeight
-        # eroded cells
-        self.features.append(self.countRowTransitions(board))
-        self.features.append(self.countColTransitions(board))
-        self.features.append(self.countNumHoles(board))
-        self.features.append(self.getNumWells(board))
-        self.features.append(self.getHoleDepths(board))
-        self.features.append(self.countRowsWithHoles(board))  # rows with holes
+        self.features.append(self.height -self.height_of_last_piece)     # landingHeight
+        self.features.append(self.getErodedPieceCells())    # eroded cells
+        self.features.append(self.countRowTransitions())
+        self.features.append(self.countColTransitions())
+        self.features.append(self.countNumHoles()) #DOES EACH EMPTY COVERED CELL COUNT AS A UNIQUE HOLE?????
+        self.features.append(self.getNumWells())
+        self.features.append(self.getHoleDepths())
+        self.features.append(self.countRowsWithHoles())  # rows with holes
 
         # BERTSEKAS FEATURES (+num holes from above)
-        temp_heights = self.getColHeights(board) # 10
+        temp_heights = self.getColHeights() # 10
         for i in range(len(temp_heights)):
             self.features.append(temp_heights[i])
-        temp_differences = self.getHeightDifferences(board) # 9
+        temp_differences = self.getHeightDifferences() # 9
         for i in range(len(temp_differences)):
             self.features.append(temp_differences[i])
 
-        self.features.append(self.getMaxHeight(board))
+        self.features.append(self.getMaxHeight())
         self.features.append(1) # constant feature ???
 
 
@@ -326,19 +365,24 @@ class BoardData(object):
 
         return self.features
 
-    def countRowsWithHoles(self, board):
+    def getErodedPieceCells(self):
+        # (Number of rows eliminated in the last move) × (Number of bricks eliminated from the last piece added)
+
+        return self.num_last_lines_cleared
+
+    def countRowsWithHoles(self):
         num_rows = 0
         width = self.width
         height = self.height
 
         for y in range(height-1, -1, -1):
             for x in range(width):
-                cur_cell = board[y, x]
+                cur_cell = self.backBoard2D[y, x]
                 if cur_cell == 0:
                     top_cell = None
 
                     if y != 0:
-                        top_cell = board[y-1, x]
+                        top_cell = self.backBoard2D[y-1, x]
 
                     if top_cell != 0 and y != 0:
                         num_rows += 1
@@ -346,33 +390,33 @@ class BoardData(object):
                         break  # break out of row and go to next
         return num_rows
 
-    def getMaxHeight(self, board):
+    def getMaxHeight(self):
         width = self.width
         height = self.height
 
         for y in range(height):
             for x in range(width):
-                if board[y, x] != 0:
+                if self.backBoard2D[y, x] != 0:
                     return y
 
         return 0
 
-    def countRowTransitions(self, board):
+    def countRowTransitions(self):
         num_transitions = 0
         width = self.width
-        max_height = self.getMaxHeight(board)
+        max_height = self.getMaxHeight()
 
         for y in range(self.height-1, max_height-1, -1): # +1 ?
             for x in range(width):
-                cur_cell = board[y, x]
+                cur_cell = self.backBoard2D[y, x]
                 if cur_cell == 0:
                     left_cell = None
                     right_cell = None
 
                     if x != 0:
-                        left_cell = board[y, x-1]
+                        left_cell = self.backBoard2D[y, x-1]
                     if x != width - 1:
-                        right_cell = board[y, x+1]
+                        right_cell = self.backBoard2D[y, x+1]
 
                     if left_cell != 0:
                         num_transitions += 1
@@ -381,22 +425,22 @@ class BoardData(object):
 
         return num_transitions
 
-    def countColTransitions(self, board):
+    def countColTransitions(self):
         num_transitions = 0
         width = self.width
         height = self.height
 
         for y in range(height-1, -1, -1):
             for x in range(width):
-                cur_cell = board[y, x]
+                cur_cell = self.backBoard2D[y, x]
                 if cur_cell == 0:
                     bottom_cell = None
                     top_cell = None
 
                     if y != 0:
-                        top_cell = board[y-1, x]
+                        top_cell = self.backBoard2D[y-1, x]
                     if y != height-1:
-                        bottom_cell = board[y+1, x]
+                        bottom_cell = self.backBoard2D[y+1, x]
 
                     if bottom_cell != 0:
                         num_transitions += 1
@@ -405,19 +449,19 @@ class BoardData(object):
 
         return num_transitions
 
-    def countNumHoles(self, board):
+    def countNumHoles(self):
         num_holes = 0
         width = self.width
         height = self.height
 
         for y in range(height-1, -1, -1):
             for x in range(width):
-                cur_cell = board[y, x]
+                cur_cell = self.backBoard2D[y, x]
                 if cur_cell == 0:
                     top_cell = None
 
                     if y != 0:
-                        top_cell = board[y-1, x]
+                        top_cell = self.backBoard2D[y-1, x]
 
                     if top_cell != 0 and y != 0:
                         num_holes += 1
@@ -428,7 +472,7 @@ class BoardData(object):
         # print('===================')
         return num_holes
 
-    def getColHeights(self, board):
+    def getColHeights(self):
         heights = []
         width = self.width
         height = self.height
@@ -436,7 +480,7 @@ class BoardData(object):
         for x in range(width):
             height_found = False
             for y in range(height):
-                if board[y, x] != 0:
+                if self.backBoard2D[y, x] != 0:
                     height_found = True
                     heights.append(height - y)
                     break
@@ -445,13 +489,13 @@ class BoardData(object):
 
         return heights
 
-    def getHeightDifferences(self, board):
+    def getHeightDifferences(self):
         # Could be combined with getColHeights() to save a tiny bit of time
         differences = []
         width = self.width
         height = self.height
 
-        heights = self.getColHeights(board)
+        heights = self.getColHeights()
         for i in range(len(heights) - 1):
             differences.append(abs(heights[i] - heights[i+1]))
 
@@ -461,22 +505,22 @@ class BoardData(object):
         # print('===================')
         return differences
 
-    def getNumWells(self, board):
+    def getNumWells(self):
         num_wells = 0
         width = self.width
         height = self.height
 
-        heights = self.getColHeights(board)
+        heights = self.getColHeights()
         for c in range(len(heights)):
             if c == 0:
-                if board[height-heights[c]-1, c+1] != 0:
+                if self.backBoard2D[height-heights[c]-1, c+1] != 0:
                     num_wells += 1
             elif c == len(heights)-1:
-                if board[height-heights[c]-1, c-1] != 0:
+                if self.backBoard2D[height-heights[c]-1, c-1] != 0:
                     num_wells += 1
             else:
-                left_cell = board[height-heights[c]-1, c-1]
-                right_cell = board[height-heights[c]-1, c+1]
+                left_cell = self.backBoard2D[height-heights[c]-1, c-1]
+                right_cell = self.backBoard2D[height-heights[c]-1, c+1]
                 if left_cell != 0 and right_cell != 0:
                     num_wells += 1
 
@@ -486,26 +530,26 @@ class BoardData(object):
         # print('===================')
         return num_wells
 
-    def countCellsAbove(self, board, cur_x, cur_y):
+    def countCellsAbove(self, cur_x, cur_y):
         count = 0
 
         for y in range(cur_y-1, -1, -1):
-            if board[y, cur_x] != 0:
+            if self.backBoard2D[y, cur_x] != 0:
                 count += 1
 
         return count
 
-    def getHoleDepths(self, board):
+    def getHoleDepths(self):
         hole_depths = 0
         width = self.width
         height = self.height
 
-        heights = self.getColHeights(board)
+        heights = self.getColHeights()
         for c in range(len(heights)):
             if heights[c] > 1: # Holes only possible if blocks are at at least height 2
                 for y in range(height-1, -1, -1):
-                    if board[y, c] == 0:
-                        hole_depths += self.countCellsAbove(board, c, y)
+                    if self.backBoard2D[y, c] == 0:
+                        hole_depths += self.countCellsAbove(c, y)
 
         # print('===================')
         # print(board)
