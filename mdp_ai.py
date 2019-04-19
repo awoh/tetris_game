@@ -92,7 +92,7 @@ def nextInitialMove(weights, s):
         scores = np.append(scores, [score])
 
     # print(action_set)
-    print(scores)
+    # print(scores)
     best = np.argwhere(scores == np.amax(scores))
     best = best.flatten().tolist()
     max = np.random.choice(best)
@@ -123,7 +123,9 @@ def makeMove(next_move, board):
         k += 1
 
     lines = board.dropDown()    # creates new piece after moving down
-    print("landing height: " + str(board.getFeatures()[0]))
+    # update board features
+    board.getFeatures()     # I DON'T GET WHY THIS IS NEEDED.....!!!
+    # print("landing height: " + str(board.getFeatures()[0]))
     return lines
 
 def getRandomState():
@@ -142,7 +144,7 @@ def getRandomState():
         # print(board.backBoard2D)
         next_move = nextInitialMove(du_policy, board)
         # print(board.backBoard2D)
-        print("next move: " + str(next_move))
+        # print("next move: " + str(next_move))
         lines = makeMove(next_move, board)
     return board
 
@@ -240,9 +242,9 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
     # for k  in range(idk):
         # at every iteration, build new value function and policy function
         s = getRandomState()
-        print(s.backBoard2D)
-        print(s.getFeatures())
-        break
+        # print(s.backBoard2D)
+        # print(s.getFeatures())
+
         num_features = len(s.getFeatures())
         val_features = np.empty((0,num_features))
         val_outputs = np.empty((0,1))
@@ -259,6 +261,8 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
 
             # generate random initial state by making num_moves number of moves
             s = getRandomState()
+            print(s.backBoard2D)
+            print(s.getFeatures())
             s_features = s.getFeatures()
             A = getActionSet(s)
 
