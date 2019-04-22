@@ -49,6 +49,8 @@ Eye
 
 # USEFUL LINKS:
 
+* tetris drawing tool (for the paper) http://harddrop.com/fumentool
+
 * tutorial/explanation of a similar code repo: http://zetcode.com/gui/pyqt5/tetris/
 
 =============================================================================================
