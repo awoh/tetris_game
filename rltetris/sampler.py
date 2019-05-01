@@ -12,35 +12,36 @@ logger = logging.getLogger(__name__)
 # Do rollout using policy to get random states
 def sample_random_states(env,policy,N):
     # Step 0 - Allocate return arrays
-    states = None
+    states = np.empty(shape = N)
 
     # Step 2 - run the environment and collect final states
     for i in range(N):
         env.reset() # reset environment
 
-        # make x number of moves
-        # get state of env
-        # add to states
+        # make x number of moves following DU policy
+        for j in range(x):
+            action = policy.action()
+            new_state = env.step(action)    # get state of env
+
+        states[i] = new_state
 
     return states
 
 
 # pass start states to function to get samples to update value function
-def get_vh(env, D_k, plc,m,gamma):
+def get_vh(env, D_k, plc,m,gamma, num_features):
     v_hats = np.empty(shape = len(D_k))
-    S_ms = np.empty(shape = len(D_k))
+    S_ms = np.empty(shape = [len(D_k), num_features])
     # go thru every state in D_k
     for i in range(len(D_k)):
         S_m, reward = rollout_from_state(env, D_k[i], plc,critic, m, gamma)   # get rollout for state
         v_hats[i] = reward
-        S_ms[i] = S_m
+        S_ms[i] = S_m   #really list of features
     return v_hats, S_ms
 
-def get_qh(env, D_k, plc,m,gamma):
-    # same thing as get_vh
-    num_actions = 40    # there are 40 potential actions
+def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
     q_hats = np.empty(shape = [len(D_k), num_actions])
-    s_ms = np.empty(shape = [len(D_k), num_actions])
+    s_ms = np.empty(shape = [len(D_k), num_actions, num_features])
 
     # go thru every state in D_k
     for i in range(len(D_k)):
@@ -127,22 +128,3 @@ def copy_state(s):
 
     # np.copyto(copy.shapeStat, board.shapeStat)
     # copy.done = board.done
-
-
-def get_action_set(board):
-    """
-    SHOULD MAYBE BE A MEMBER FUNCTION OF ENVIRONMENT!!
-    Determines A based on the board state, A = {(rotation, column)}
-    max size of A = 34 (for L, J, and T)
-    we want size A = 40 (try every possible rotation/column pair)
-    """
-    A = np.array(shape=40)  # r = rotation, c = column, minY= offset from top of board
-    for r in range(4):
-        for c in range(10):
-            # minX, maxX, minY, maxY = board.nextShape.getBoundingOffsets(0)
-            minX, maxX, minY, maxY = board.currentShape.getBoundingOffsets(r)
-            if(board.tryMoveCurrent(r, c, -minY)):
-                A[r*10 +c] = (r,c, -minY) # add to set
-            else:
-                A[r*10+c] = (-1,-1,0)
-    return A

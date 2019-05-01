@@ -10,6 +10,11 @@ from tetris import environment as env
 
 # to register, look at torchkit (good example of base environment and multiple subtypes)
 
+def features(state):
+    """returns list of features for given state """
+    pass
+
+
 Class FeatureWrapper():
 
 	__init__(self,env):

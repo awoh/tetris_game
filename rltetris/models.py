@@ -9,7 +9,7 @@ class BasePolicy(object):
     Base policy class
     """
     def __init__(self,**kwargs):
-        self.model = LinearRegression()
+        # self.model = LinearRegression()
         self.weights = [0]  # weights are a matrix of featuers * num_actions
         # SHOULD PASS IN ENVIRONMENT!!
         pass
@@ -20,7 +20,7 @@ class BasePolicy(object):
     def load_model(self,path):
         # loading and saving from disk
         raise NotImplementedError()
-        
+
     def action(self,*args,**kwargs):
         # choose argmax of policy
         # want a vector of actions that are/aren't allowed and then only
