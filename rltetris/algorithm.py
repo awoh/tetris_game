@@ -40,10 +40,7 @@ class CBMPI(object):
 
 
 
-        # add final reward to it here (so just get rewards from get_vh)
-        for i in range(len(v_hats)):
-            estimated_v_val = critic.sample(v_states[i]) + v_hats[i]
-            v_hats[i] = estimated_v_val
+
 
 
         # add final reward to it here (so just get rewards from get_vh)
@@ -77,16 +74,13 @@ class CBMPI(object):
 
         raise NotImplementedError()
 
-    def update_critic(self,batch, v_hats):
+    def update_critic(self,batch, v_hats, v_states):
         """updating value function """
         # add estimatesd reward here
-
-
-            # v=0    # if haven't developed a model for value function yet...idk
-            # if(critic != None):
-            #     s_features = S_i.getFeatures()    # get state, so can predict using model
-            #     v = critic.sample(s_features)    #HOW TO GET VALUE FROM CRITIC??????
-            #     tot_reward += (gamma**m) * v # compute the unbiased estimate (v), prev_v based on m moves away from s
+        # v-hats is really the estimated reward
+        for i in range(len(v_hats)):
+            estimated_v_val = critic.sample(v_states[i]) + v_hats[i]
+            v_hats[i] = estimated_v_val
 
         new_val = linear_model.LinearRegression()
         new_val.fit(val_features, val_outputs)

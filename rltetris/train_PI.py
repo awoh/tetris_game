@@ -83,11 +83,12 @@ if __name__ == '__main__':
         init_states = smp.sample_random_states(env, plc, train_config['N'])
 
         # pass start states to function to get samples to update value function
-        v_batch= smp.get_vh(env,init_states,plc,m,gamma)
-        q_batch = smp.get_qh(env,init_states,plc,m,gamma)
+        # SHOULD COMBINE V_HATS AND V_STATES IN THE GET_VH SO JUST ONE BATCH OUTPUT!!
+        v_hats, v_states= smp.get_vh(env,init_states,plc,m,gamma)
+        q_hats, q_states = smp.get_qh(env,init_states,plc,m,gamma)
 
-        algo.update_critic(init_states, v_batch)    # update critic first
-        algo.update_policy(init_states, q_batch)
+        algo.update_critic(init_states,v_hats, v_states)    # update critic first
+        algo.update_policy(init_states, q_hats, q_states)
 
         # run evaluation code, save results, log resutls
 
