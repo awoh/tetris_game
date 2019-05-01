@@ -77,6 +77,10 @@ if __name__ == '__main__':
     finished_episodes = 0
     start = time.time()
     # results_data = np.array([]).reshape((train_config['num_updates'],))
+
+    # create wrapper for environment
+    w_env = FeatureWrapper(env)
+
     while cur_update < train_config['num_updates']:
 
         # get set D_k (get start states)
@@ -84,8 +88,8 @@ if __name__ == '__main__':
 
         # pass start states to function to get samples to update value function
         # SHOULD COMBINE V_HATS AND V_STATES IN THE GET_VH SO JUST ONE BATCH OUTPUT!!
-        v_hats, v_states= smp.get_vh(env,init_states,plc,m,gamma)
-        q_hats, q_states = smp.get_qh(env,init_states,plc,m,gamma)
+        v_hats, v_states= smp.get_vh(w_env,init_states,plc,m,gamma)
+        q_hats, q_states = smp.get_qh(w_env,init_states,plc,m,gamma)
 
         algo.update_critic(init_states,v_hats, v_states)    # update critic first
         algo.update_policy(init_states, q_hats, q_states)
