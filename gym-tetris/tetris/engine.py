@@ -146,9 +146,6 @@ class TetrisEngine(object):
             new_board[(-num_left):,:] = self.state.board[rmask,:]
             self.state.board = new_board
 
-        print(self.getFeatures())
-        print(len(self.getFeatures()))
-
         return num_full
 
     def mergePiece(self):
