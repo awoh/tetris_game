@@ -74,6 +74,7 @@ class TetrisEnvironment(gym.Env):
         r_tp1 = self._engine.moveRotateDrop(action[0],action[1])
 
         self._terminal = self._engine.done
+        return featuers, r_tp1,self._terminal,{}
         return self.state,r_tp1,self._terminal,{}
 
 
@@ -88,8 +89,8 @@ class TetrisEnvironment(gym.Env):
         return self._engine.reset()
 
     def set_state(self, state):
-        self._engine = state
-        self._terminal = self._engine.done
+        self._engine.setState(state)
+        # self._terminal = self._engine.done
 
     @property
     def state(self):

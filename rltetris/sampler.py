@@ -4,7 +4,7 @@ import numpy as np
 import logging
 import random
 import copy
-from tetris import TetrisEngine, Shape, ShapeKind
+from tetris import TetrisEngine, TetrisState, Shape, ShapeKind
 from environment import TetrisEnvironment
 logger = logging.getLogger(__name__)
 
@@ -15,50 +15,55 @@ def sample_random_states(env,policy,N):
     states = None
 
     # Step 2 - run the environment and collect final states
+    for i in range(N):
+        env.reset() # reset environment
+
+        # make x number of moves
+        # get state of env
+        # add to states
 
     return states
 
-# function to call all rollouts for all states
-# def all_rollouts():
-#     rollout_from_state(env, )
-#     return batch
 
 # pass start states to function to get samples to update value function
-def get_vh(env, D_k, plc,critic,m,gamma):
+def get_vh(env, D_k, plc,m,gamma):
     v_hats = np.empty(shape = len(D_k))
+    S_ms = np.empty(shape = len(D_k))
     # go thru every state in D_k
     for i in range(len(D_k)):
         S_m, reward = rollout_from_state(env, D_k[i], plc,critic, m, gamma)   # get rollout for state
         v_hats[i] = reward
-    return v_hats
+        S_ms[i] = S_m
+    return v_hats, S_ms
 
-def get_qh(env, D_k, plc,critic,m,gamma):
+def get_qh(env, D_k, plc,m,gamma):
     # same thing as get_vh
     num_actions = 40    # there are 40 potential actions
-    q_hats = np.empty(shape = [len(D_k), num_actions]
+    q_hats = np.empty(shape = [len(D_k), num_actions])
+    s_ms = np.empty(shape = [len(D_k), num_actions])
 
     # go thru every state in D_k
     for i in range(len(D_k)):
         curr_state = D_k[i]
         A = get_action_set(curr_state)
 
-       # for every possible action from state s, make action and then follow policy for m steps
-       for j in range(len(A)):
-           tot_Q = 0
-           a = A[j]
-           # if action not possible...
-           if a == (-1,-1,0):
-               pass
+        # for every possible action from state s, make action and then follow policy for m steps
+        for j in range(len(A)):
+            tot_Q = 0
+            a = A[j]
+            # if action not possible...
+            if a == (-1,-1,0):
+                q_hats[(i,j)] = reward   # assign for given state, action pair, q_hat value
+                s_ms[(i,j)] = S_m
+                pass
 
-           # build M rollouts  (get rewards for all future states (1 -> m+1))
-           # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
-           for i in range(M):
-               S_m, reward = rollout_from_state(env, D_k[i], plc, critic m+1, gamma, a)   # get rollout for state
-               tot_Q += R
+            # build M rollouts  (get rewards for all future states (1 -> m+1))
+            # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
+            S_m, reward = rollout_from_state(env, D_k[i], plc, critic m+1, gamma, a)   # get rollout for state
+            q_hats[(i,j)] = reward   # assign for given state, action pair, q_hat value
+            s_ms[(i,j)] = S_m
 
-        Q_hat = tot_Q / M   # calculate Q_hat
-        q_hats[(i,j)] = Q_hat   # assign for given state, action pair, q_hat value
-    return q_hats
+    return q_hats, s_ms
 
 
 
@@ -72,9 +77,8 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
     # S_m, R_disc = None, None
 
     # Step 1 - set start state
-    copy_state(start, S_i)
-    env._engine.setState(S_i)
-    copy_state(start, S_i)
+    # CURRENTLY CREATING NEW TETRIS STATE
+    S_i = copy_state(start)
     env.set_state(S_i)
 
     tot_reward = 0
@@ -87,9 +91,9 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
             next_move = start_action
         else:
             # use policy
-            next_move = getAction(S_i, plc, get_action_set(S_i))
+            # use wrapper environemnt, so S_i is really set of reatures
+            next_move = plc.action(S_i)
 
-        # DO I DO ENV.SET_STATE?????
         env_state, curr_reward, _, _ = env.step(action)
 
         # if reached end of game before doing m steps
@@ -100,38 +104,34 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
         tot_reward += (gamma**i) * curr_reward    # add gamma*reward to sum of rewards
 
     # use policy, and make final move
-    next_move = getAction(S_i, plc, get_action_set(S_i))
+    next_move = plc.action(S_i)
     env.step(next_move)
-    # S_i.moveRotateDrop(next_move[0], next_move[1])
-
-
-
 
     env.set_state(start)        # reset environment to start state
     return S_i, tot_reward
 
 
-def copy_state(board, copy):
-    copy.width = board.width
-    copy.height = board.height
+def copy_state(s):
+    copy_board = ndarray.copy(s.board)
+    new_s = TetrisState(copy_board,s.x,s.y,s.direction,s.currentShape,s.nextShape)
+    return new_s
 
-    np.copyto(copy.state.board, board.state.board)
-    copy.state.x = board.state.x
-    copy.state.y = board.state.y
-    copy.state.direction = board.state.direction
-    copy.state.currentShape = board.state.currentShape
-    copy.state.nextShape = board.state.nextShape
-    copy.state.width = board.state.width
-    copy.state.height = board.state.height
+    # np.copyto(copy.board, board.board)
+    # copy.x = board.x
+    # copy.y = board.y
+    # copy.direction = board.direction
+    # copy.currentShape = board.currentShape
+    # copy.nextShape = board.nextShape
+    # copy.width = board.width
+    # copy.height = board.height
 
-    np.copyto(copy.shapeStat, board.shapeStat)
-    copy.done = board.done
-
-    # return new_s
+    # np.copyto(copy.shapeStat, board.shapeStat)
+    # copy.done = board.done
 
 
 def get_action_set(board):
     """
+    SHOULD MAYBE BE A MEMBER FUNCTION OF ENVIRONMENT!!
     Determines A based on the board state, A = {(rotation, column)}
     max size of A = 34 (for L, J, and T)
     we want size A = 40 (try every possible rotation/column pair)

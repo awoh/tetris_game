@@ -9,26 +9,33 @@ class BasePolicy(object):
     Base policy class
     """
     def __init__(self,**kwargs):
+        self.model = LinearRegression()
+        self.weights = [0]  # weights are a matrix of featuers * num_actions
+        # SHOULD PASS IN ENVIRONMENT!!
         pass
 
     def save_model(self,path):
         raise NotImplementedError()
 
-    def sample(self,*args,**kwargs):
+    def load_model(self,path):
+        # loading and saving from disk
+        raise NotImplementedError()
+        
+    def action(self,*args,**kwargs):
+        # choose argmax of policy
+        # want a vector of actions that are/aren't allowed and then only
+        # do argmax on ones that are alowed.
+        # policy
         raise NotImplementedError()
 
     def get_params(self):
         # get weights
-        raise NotImplementedError()
+        return self.weights
 
     def set_params(self,*args,**kwargs):
         # setting weights
-        raise NotImplementedError()
+        self.weights = weights
 
-
-    def load_model(self,path):
-        # loading and saving from disk
-        raise NotImplementedError()
 
 
 # Define Value function interface
@@ -37,25 +44,24 @@ class BaseValue(object):
     Base value class
     """
     def __init__(self,**kwargs):
+        self.model = LinearRegression()
         self.weights = [0]
         pass
 
     def save_model(self,path):
         raise NotImplementedError()
 
-    def eval(self,*args,**kwargs):
-        raise NotImplementedError()
-
     def load_model(self,path):
         raise NotImplementedError()
 
+    def eval(self,state):
+        return self.model.predict(state)   #STATE IS REALLY JUST FEATURES OF STATE
+
     def get_params(self):
         return self.weights
-        # raise NotImplementedError()
 
     def set_params(self,*args,**kwargs):
-        self.weights =
-        raise NotImplementedError()
+        self.weights = weights
 
 # Implement DUPolicy for tetris initial state rollouts
 class DUPolicy(BasePolicy):

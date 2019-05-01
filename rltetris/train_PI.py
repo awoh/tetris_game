@@ -16,7 +16,15 @@ import environments
 from algorithm import CBMPI
 import models
 
-
+def eval_policy(env, plc):
+    """takes in environment and policy and runs game """
+    env.reset()
+    lines_cleared = 0
+    while env._terminal != True:
+        action = plc.action(env._engine.state)
+        _, reward, _, _ = env.step()
+        lines_cleared += reward
+    return lines_cleared
 
 if __name__ == '__main__':
     #############################
@@ -60,7 +68,7 @@ if __name__ == '__main__':
     quit()
     # TODO - Modify the code below
     # THERE MAY BE ERRORS -- CHECK THIS
-    plc,critic = models.LinearVFA(),models.LinearPolicy()
+    plc,critic = models.LinearVFA(),models.LinearPolicy(env)
     algo = CBMPI(plc,critic,train_config)
     # episode_results = np.array([]).reshape((0,6))     # will allow for training curve like in paper
     episode_results = np.array([]).reshape((train_config['num_updates']*num_eval,4)) # allocate nujmpy array for all of iterations and evaluations initially, so can add more to it later
@@ -73,30 +81,25 @@ if __name__ == '__main__':
 
         # get set D_k (get start states)
         init_states = smp.sample_random_states(env, plc, train_config['N'])
-        # pass start states to function to get samples to update value function
-        v_hats = smp.get_vh(env,init_states,plc,critic,m,gamma)
-        q_hats = smp.get_qh(env,init_states,plc,critic,m,gamma)
-        v_batch = np.array([init_states, v_hats])
-        q_batch = np.array([init_states, q_hats])
 
-        algo.update_critic(v_batch)    # update critic first
-        algo.update_policy(q_batch)
+        # pass start states to function to get samples to update value function
+        v_batch= smp.get_vh(env,init_states,plc,m,gamma)
+        q_batch = smp.get_qh(env,init_states,plc,m,gamma)
+
+        algo.update_critic(init_states, v_batch)    # update critic first
+        algo.update_policy(init_states, q_batch)
 
         # run evaluation code, save results, log resutls
 
          # save entire list to some file (instead of just average, provides additional info)
         # have function that takes environment name (train_config['n']) and policy
-        # run
-        # do gym.make( string name), constructs envirnoment, sees reward and evalutates game
-
-
-        # save results
+        # run and save results
         for i in range(num_eval):
             # [(iteration_number,discounted_reward,lines_cleared)]
             res = eval_policy(env,plc)
 
             finished_episodes += 1
-            total_samples = cur_update * samples_per_update   #WHAT IS THIS???
+            # total_samples = cur_update * samples_per_update   #WHAT IS THIS???
             # stores: total_updates, total_episodes, total_samples, current_episode_length, current_total_reward, current_cumulative_reward
 
             # after update, generate list (for each of evaluations, put entry in list saying (iteration, lines cleared, discounted reward)
