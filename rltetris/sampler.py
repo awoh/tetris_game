@@ -30,18 +30,20 @@ def sample_random_states(env,policy,N):
 
 # pass start states to function to get samples to update value function
 def get_vh(env, D_k, plc,m,gamma, num_features):
-    v_hats = np.empty(shape = len(D_k))
-    S_ms = np.empty(shape = [len(D_k), num_features])
+    v_batch = [ [[0]*num_features, 0] ]*len(D_k)  # every state has [S, v], with S being []
+    # v_hats = [0]*len(D_k)
+    # S_ms = [[0]*num_features]*len(D_k)
     # go thru every state in D_k
     for i in range(len(D_k)):
         S_m, reward = rollout_from_state(env, D_k[i], plc,critic, m, gamma)   # get rollout for state
-        v_hats[i] = reward
-        S_ms[i] = S_m   #really list of features
-    return v_hats, S_ms
+        v_batch[i] = [S_m, reward]
+    v_batch = np.array(v_batch)
+    return v_batch
 
 def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
-    q_hats = np.empty(shape = [len(D_k), num_actions])
-    s_ms = np.empty(shape = [len(D_k), num_actions, num_features])
+    q_batch = [ [ [[0]*num_features, 0] ]*num_actions ]*len(D_k)
+    # q_hats = np.empty(shape = [len(D_k), num_actions])
+    # s_ms = np.empty(shape = [len(D_k), num_actions, num_features])
 
     # go thru every state in D_k
     for i in range(len(D_k)):
@@ -54,17 +56,18 @@ def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
             a = A[j]
             # if action not possible...
             if a == (-1,-1,0):
-                q_hats[(i,j)] = reward   # assign for given state, action pair, q_hat value
-                s_ms[(i,j)] = S_m
+                # q_batch[i][j] = [reward, S_m]
+                # q_hats[(i,j)] = reward   # assign for given state, action pair, q_hat value
+                # s_ms[(i,j)] = S_m
                 pass
 
             # build M rollouts  (get rewards for all future states (1 -> m+1))
             # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
             S_m, reward = rollout_from_state(env, D_k[i], plc, critic m+1, gamma, a)   # get rollout for state
-            q_hats[(i,j)] = reward   # assign for given state, action pair, q_hat value
-            s_ms[(i,j)] = S_m
+            q_batch[i][j] = [S_m, reward]
 
-    return q_hats, s_ms
+    q_batch = np.array(q_batch)
+    return q_batch
 
 
 

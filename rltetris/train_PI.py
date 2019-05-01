@@ -90,11 +90,11 @@ if __name__ == '__main__':
         # SHOULD COMBINE V_HATS AND V_STATES IN THE GET_VH SO JUST ONE BATCH OUTPUT!!
         num_actions = 40    # there are 40 potential actions
         num_features = 10
-        v_hats, v_states= smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
-        q_hats, q_states = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
+        v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
+        q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
 
-        algo.update_critic(init_states,v_hats, v_states)    # update critic first
-        algo.update_policy(init_states, q_hats, q_states)
+        algo.update_critic(init_states,v_batch)    # update critic first
+        algo.update_policy(init_states, q_batch)
 
         # run evaluation code, save results, log resutls
          # save entire list to some file (instead of just average, provides additional info)

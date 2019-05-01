@@ -38,29 +38,28 @@ class CBMPI(object):
         self._critic = critic
 
 
-
-
-
-
-
-        # add final reward to it here (so just get rewards from get_vh)
-        for i in range(len(v_hats)):
-            # add reward to q_hats, too
-            for j in range(len(q_hats[j])):
-                estimated_q_val = critic.sample(q_states[(i,j)]) + q_hats[(i,j)]
-                q_hats[(i,j)] = estimated_q_val
-
     # Objective function for CMA-ES
     # Need to bind the first arg using lambda function before optimizing
     # NOTE - You may want to add additional arguments
     # omega0 - initial param
     # batch - train data
     def _policy_loss_cbmpi(self, omega0,batch):
-        # compute ugly thing from
+        # compute ugly thing from paper
         pass
 
-    def update_policy(self,batch, q_hats):
-        """updating policy (uses CMA-ES) """
+    def update_policy(self,batch):
+        """updating policy (uses CMA-ES)
+        q_hats: [[Q_0,Q_1,...Q_a],...], list of every actions's Q value for every init state.(size: N*|A|)
+        q_states:[[S_0,S_1,...S_a],...], where S_a is set of features for a state (size: N* (|A|*features))
+        """
+
+        # add final reward to it here (so just get rewards from get_vh)
+        for i in range(len(q_hats)):
+            # add reward to q_hats, too
+            for j in range(len(q_hats[j])):
+                estimated_q_val = self._critic.sample(q_states[(i,j)]) + q_hats[(i,j)]
+                q_hats[(i,j)] = estimated_q_val
+
         # This is where you need to call CMA-ES
         # https://pypi.org/project/cma/
         # you need to give it an objective function to evaluate
@@ -74,15 +73,18 @@ class CBMPI(object):
 
         raise NotImplementedError()
 
-    def update_critic(self,batch, v_hats, v_states):
+    def update_critic(self,batch):
         """updating value function """
         # add estimatesd reward here
         # v-hats is really the estimated reward
-        for i in range(len(v_hats)):
-            estimated_v_val = critic.sample(v_states[i]) + v_hats[i]
-            v_hats[i] = estimated_v_val
-
-        new_val = linear_model.LinearRegression()
-        new_val.fit(val_features, val_outputs)
-        # print("coefs: " + str(curr_val.coef_))   # prints the weights in the model
-        self._critic.set_params(new_val.get_params())      # update current value function
+        for i in range(len(batch)):
+            state = batch[i][0]
+            roll_val = batch[i][1]
+            estimated_v_val = self._critic.sample(state) + roll_val
+            v_hats[i][1] = estimated_v_val
+        states = batch[:,0]
+        vals = batch[:,1]
+        # new_val = linear_model.LinearRegression()
+        self._critic.fit(states, val)
+        new_params = self._critic.model.get_params()
+        self._critic.set_params(new_params)
