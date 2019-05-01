@@ -203,8 +203,10 @@ class TetrisEngine(object):
         for i in range(5):
             c = np.mean(np.array([temp_heights]))
             h = self.height
+            numer = -1 * abs(c - (i * h)/4)**2
+            denom = 2 * ((h / 5)**2)
             rbf_height = math.exp(-1*((c - (i*h)/4)**2)/(2*(h/5)**2))
-            self.features.append(rbf_height)
+            self.features.append(numer / denom)
 
         return self.features
 
