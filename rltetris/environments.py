@@ -27,4 +27,5 @@ Class FeatureWrapper():
 
 	def step(action):
 		S_tp1,t_tp1,terminal,inf = self._env.step(action)
-		Return features(s_tp1),r_tp1,terminal,inf
+
+		return features(s_tp1),r_tp1,terminal,inf

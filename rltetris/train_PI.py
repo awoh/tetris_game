@@ -68,7 +68,7 @@ if __name__ == '__main__':
     quit()
     # TODO - Modify the code below
     # THERE MAY BE ERRORS -- CHECK THIS
-    plc,critic = models.LinearVFA(),models.LinearPolicy(env)
+    init_plc,critic,plc = models.DUPolicy(),models.LinearVFA(),models.LinearPolicy(env)
     algo = CBMPI(plc,critic,train_config)
     # episode_results = np.array([]).reshape((0,6))     # will allow for training curve like in paper
     episode_results = np.array([]).reshape((train_config['num_updates']*num_eval,4)) # allocate nujmpy array for all of iterations and evaluations initially, so can add more to it later
@@ -83,8 +83,8 @@ if __name__ == '__main__':
 
     while cur_update < train_config['num_updates']:
 
-        # get set D_k (get start states)
-        init_states = smp.sample_random_states(env, plc, train_config['N'])
+        # get set D_k (get start states), use DU Policy
+        init_states = smp.sample_random_states(env, init_plc, train_config['N'])
 
         # pass start states to function to get samples to update value function
         # SHOULD COMBINE V_HATS AND V_STATES IN THE GET_VH SO JUST ONE BATCH OUTPUT!!
