@@ -48,14 +48,17 @@ def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
     # go thru every state in D_k
     for i in range(len(D_k)):
         curr_state = D_k[i]
+        env.set_state(curr_state)
         A = get_action_set(curr_state)
 
         # for every possible action from state s, make action and then follow policy for m steps
         for j in range(len(A)):
             tot_Q = 0
             a = A[j]
+
+            
             # if action not possible...
-            if a == (-1,-1,0):
+            if a == 0:
                 # q_batch[i][j] = [reward, S_m]
                 # q_hats[(i,j)] = reward   # assign for given state, action pair, q_hat value
                 # s_ms[(i,j)] = S_m
@@ -63,7 +66,7 @@ def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
 
             # build M rollouts  (get rewards for all future states (1 -> m+1))
             # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
-            S_m, reward = rollout_from_state(env, D_k[i], plc, critic m+1, gamma, a)   # get rollout for state
+            S_m, reward = rollout_from_state(env, curr_state, plc, critic m+1, gamma, a)   # get rollout for state
             q_batch[i][j] = [S_m, reward]
 
     q_batch = np.array(q_batch)

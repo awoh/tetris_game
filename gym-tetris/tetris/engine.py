@@ -34,12 +34,25 @@ class TetrisEngine(object):
         self.height_of_last_piece = 22
         self.num_last_lines_cleared = 0
         self.num_last_piece_cleared = 0
+                
+        action_list = []
+        for r in range(4):
+            for c in range(self.width):
+                action_list.append((r,c,0))
+
+        self.action_map = {i: action_list[i] for i in range(len(action_list))}
 
     def getData(self):
         return self.state.board[:]
-        
+
     def setState(self, state):
         self.state = state
+
+    def reset(self):
+        self.state = TetrisState(np.zeros((self.height,self.width),dtype=np.intc),
+            -1,-1,0,Shape(),Shape.random())
+        self.createNewPiece()
+        self.done = False
 
     def getCurrentShapeCoord(self):
         return self.state.currentShape.getCoords(self.state.direction, self.state.x, self.state.y)
@@ -168,8 +181,6 @@ class TetrisEngine(object):
         # TODO:
 
         self.features = []
-        # self.backBoard2D = np.array(self.backBoard).reshape((self.height, self.width))
-
 
         # DU FEATURES
         self.features.append(self.height -self.height_of_last_piece)     # landingHeight
@@ -186,7 +197,7 @@ class TetrisEngine(object):
         temp_heights = self.getColHeights() # 10
         for i in range(len(temp_heights)):
             self.features.append(temp_heights[i])
-            
+
         # height difference between columns
         temp_differences = self.getHeightDifferences() # 9
         for i in range(len(temp_differences)):
@@ -404,7 +415,7 @@ class TetrisEngine(object):
         # print('differences: ' + str(differences))
         # print('===================')
         return differences
-        
+
     def countPatternDiversity(self):
         diversity_count = 0
         width = self.width
@@ -427,9 +438,3 @@ class TetrisEngine(object):
         diversity_count += len(set(string_cols))
 
         return diversity_count
-
-    def reset(self):
-        self.state = TetrisState(np.zeros((self.height,self.width),dtype=np.intc),
-            -1,-1,0,Shape(),Shape.random())
-        self.createNewPiece()
-        self.done = False

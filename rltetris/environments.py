@@ -29,3 +29,6 @@ Class FeatureWrapper():
 		S_tp1,t_tp1,terminal,inf = self._env.step(action)
 
 		return features(s_tp1),r_tp1,terminal,inf
+
+    def get_action_set(self):
+        return self._env.get_action_set()

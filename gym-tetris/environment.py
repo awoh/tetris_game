@@ -109,22 +109,22 @@ class TetrisEnvironment(gym.Env):
         random.seed(seed)
         np.random.seed(seed)
 
-    def get_action_set(self, board):
+    def get_action_set(self):
         """
-        SHOULD BE A MEMBER FUNCTION OF ENVIRONMENT!!
         Determines A based on the board state, A = {(rotation, column)}
-        max size of A = 34 (for L, J, and T)
         we want size A = 40 (try every possible rotation/column pair)
+
+        Returns: list of size 40, 0 = action not possible, 1 = action possible at every position
         """
         A = np.array(shape=40)  # r = rotation, c = column, minY= offset from top of board
         for r in range(4):
-            for c in range(10):
+            for c in range(self._engine.width):
                 # minX, maxX, minY, maxY = board.nextShape.getBoundingOffsets(0)
-                minX, maxX, minY, maxY = board.currentShape.getBoundingOffsets(r)
-                if(board.tryMoveCurrent(r, c, -minY)):
-                    A[r*10 +c] = (r,c, -minY) # add to set
+                minX, maxX, minY, maxY = self._engine.state.currentShape.getBoundingOffsets(r)
+                if(self._engine.tryMoveCurrent(r, c, -minY)):
+                    A[r*10 +c] = 1 # can make move
                 else:
-                    A[r*10+c] = (-1,-1,0)
+                    A[r*10+c] = 0 # action not possible
         return A
 
 register_envs()
