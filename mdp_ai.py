@@ -27,9 +27,8 @@ import copy
 # evaluation function to evaluate all states:
     # f is defined as linear combo of set of features, phi
     # f(.) = phi * (.) * theta, theta = parameter vector (policy/controller)
-def copyState(s):
-    new_s = BoardData()
-    new_s.backBoard = s.backBoard.copy()
+def copyState(new_s, s):
+    np.copyto(new_s.backBoard, s.backBoard)
     new_s.height_of_last_piece = s.height_of_last_piece
     new_s.currentX = s.currentX
     new_s.currentY = s.currentY
@@ -37,17 +36,21 @@ def copyState(s):
     new_s.currentShape = s.currentShape
     episode_data = []
 
-    new_s.backBoard2D = copy.deepcopy(s.backBoard2D)
-    new_s.features = s.features.copy()
+    np.copyto(new_s.backBoard2D, s.backBoard2D)
+    np.copyto(new_s.features, s.features)
     new_s.num_last_lines_cleared = s.num_last_lines_cleared
 
     new_s.pieces_consumed = s.pieces_consumed
 
-    new_s.shape_queue = s.shape_queue.copy()
+    np.copyto(np.resize(new_s.shape_queue, s.shape_queue.size),s.shape_queue)
     new_s.nextShape = s.nextShape
 
-    new_s.shapeStat = s.shapeStat.copy()
+    np.copyto(new_s.shapeStat, s.shapeStat)
     return new_s
+
+
+def resetCopy(init_s, new_s):
+    pass
 
 def nextInitialMove(weights, s):
     """
@@ -60,6 +63,12 @@ def nextInitialMove(weights, s):
     # print("min y start: " + str(s.currentY))
     action_set = getActionSet(s)
     scores = np.array([])
+    copy_state = BoardData()
+    # print("new: ")
+    # print(copy_state.backBoard)
+    # print('old: ')
+    # print(s.backBoard)
+
     for a in action_set:
         # do action
         score =0
@@ -69,10 +78,10 @@ def nextInitialMove(weights, s):
             # board = np.array(s.getData()).reshape((s.height, s.width))
 
             # miny = dropDown(s, board, s.currentShape, a[0], a[1])
-            copy_state = copyState(s)
+            # copy_state = resetCopy(s, copy_state)
+            copy_state = copyState(copy_state, s)
             lines = makeMove(a, copy_state)
             future_feats = copy_state.getFeatures()
-            # print(future_feats)
 
             # lines = calculateLinesCleared(s, board, a[0], a[1])
             score = calculateReward(weights, future_feats)   # evaluate and add to list
@@ -120,7 +129,7 @@ def getRandomState():
     Creates initial random state for training
     """
     # let regular tetris_ai calculateScore get random initial moves for state in D
-    num_moves = random.randint(5,15)    # number of moves to make when creating init state
+    num_moves = random.randint(5,25)    # number of moves to make when creating init state
     board = BoardData()
     board.createNewPiece()  # create initial piece
     print("num moves: " + str(num_moves))
@@ -162,6 +171,8 @@ def getAction(board, policy, action_set):
         if len(valid_actions) == 0:
             return (-1,-1,0)
         rand_i = random.randint(0, len(valid_actions)-1)
+        # du_policy = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04]
+        # action = nextInitialMove(du_policy, board)
         action = valid_actions[rand_i]
     else:
         piece = [0]*7   # one hot encode piece
@@ -173,14 +184,13 @@ def getAction(board, policy, action_set):
         action =  action_set[max_score]
     return action
 
-def rollout(s, steps, curr_val, curr_policy, init_action, gamma):
+def rollout(curr_state, steps, curr_val, curr_policy, init_action, gamma):
     """
     Generate rollout for a given state (goes steps number of actions into future)
     Returns the total reward for the rollout
     """
     tot_reward = 0
     curr_reward = 0 # PROBABLY SHOULD CHANGE???????????
-    curr_state = copyState(s)       #make a copy of the state
 
     # need to go from 0 to m-1, m is an upper bound (since game may end earlier)
     for i in range(steps):
@@ -193,7 +203,6 @@ def rollout(s, steps, curr_val, curr_policy, init_action, gamma):
                 break   # if exhausted all potential actions and game is over
 
         curr_reward = makeMove(next_move, curr_state)    # make move, cur_reward = lines cleared by action
-        # CAN'T CALL MAKE MOVE HERE...WILL MODIFY BOARD...
 
         # curr_reward = calculateReward(curr_state), curr_reward is the immediate reward (score, ie # lines cleared)
         tot_reward += (gamma**i) * curr_reward    # add gamma*reward to sum of rewards
@@ -216,7 +225,7 @@ def play(policy):
         next_move = getAction(board, policy, A)
         lines = makeMove(next_move, board)
         game_lines += lines
-
+    print(board.backBoard2D)
     return game_lines
 
 def mpi(N, M, m, error_threshold, gamma, num_evaluations):
@@ -226,39 +235,43 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
     """
     done = False
     curr_policy_score = 1
+    curr_val = None
+    curr_policy = None  # weights are all the same, so would pick random action
     # i don't know what k is... maybe just do while not done (until new_policy = curr_policy)
+    s = getRandomState()
+    # print(s.backBoard2D)
+    # print(s.getFeatures()[6])
+    # break
+    num_features = len(s.getFeatures())
+    tot_features = num_features + 7
+
+
     while not done:
     # for k  in range(idk):
         # at every iteration, build new value function and policy function
-        s = getRandomState()
-        print(s.backBoard2D)
-        print(s.getFeatures()[6])
-        break
 
-        num_features = len(s.getFeatures())
         val_features = np.empty((0,num_features))
         val_outputs = np.empty((0,1))
 
-        tot_features = num_features + 7
         policy_features = np.empty((0, tot_features))
         policy_outputs = np.empty((0,40)) # output values: max of q_set - q_hat for given action
-
-        curr_val = None
-        curr_policy = None  # weights are all the same, so would pick random action
 
         # sampling N states from distribution (each iteration, generating new random state)
         for i in range(N):
 
             # generate random initial state by making num_moves number of moves
             s = getRandomState()
-            print(s.backBoard2D)
-            print(s.getFeatures())
             s_features = s.getFeatures()
             A = getActionSet(s)
+            print(s.backBoard2D)
+            # print(s_features)
 
             # generate rollout for state of size m (go up to m steps away)
             action = getAction(s, curr_policy, A)
-            v_hat = rollout(s, m, curr_val, curr_policy, action, gamma)
+
+            curr_state = BoardData()
+            curr_state = copyState(curr_state, s)       #make a copy of the state
+            v_hat = rollout(curr_state, m, curr_val, curr_policy, action, gamma)
 
             # add (s, v) to training set for regressor (x = state_set, y = val_set)
             # s is represented by the features determined in board
@@ -278,7 +291,8 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
                 # build M rollouts  (get rewards for all future states (1 -> m+1))
                 for i in range(M):
                     # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
-                    R = rollout(s, m+1, curr_val, curr_policy, a, gamma)
+                    curr_state = copyState(curr_state, s)
+                    R = rollout(curr_state, m+1, curr_val, curr_policy, a, gamma)
                     tot_Q += R
 
                 Q_hat = tot_Q / M   # calculate Q_hat
@@ -297,7 +311,7 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
         new_val = linear_model.LinearRegression()
         new_val.fit(val_features, val_outputs)
         curr_val = new_val      # update current value function
-        # print(curr_val.coef_)   # prints the weights in the model
+        print("coefs: " + str(curr_val.coef_))   # prints the weights in the model
 
         # learn new policy w/ classifier
         # input: state, output: set of q_hats (all values for actions of a given set)
@@ -312,6 +326,7 @@ def mpi(N, M, m, error_threshold, gamma, num_evaluations):
 
         new_policy_score = tot_lines/num_evaluations
         print("policy score: " + str(new_policy_score))
+        break
 
         # if curr_policy is approximately new_policy, save policy into file end
         policy_change = new_policy_score - curr_policy_score
@@ -330,7 +345,7 @@ def main():
 
     # A = {}      #action set (32 possible actions)...what are these???
     M = 1
-    N = 5
+    N = 10
     m = 5
     gamma = 1
     error_threshold = 0.01

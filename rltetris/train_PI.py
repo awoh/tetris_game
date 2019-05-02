@@ -16,7 +16,7 @@ import environments
 from algorithm import CBMPI
 import models
 
-from gym-tetris/tetris import TetrisEnvironment
+from gym-tetris import TetrisEnvironment
 
 def eval_policy(env, plc):
     """takes in environment and policy and runs game """
