@@ -1,0 +1,14 @@
+{
+    "M": 1,
+    "N": 20,
+    "console": false,
+    "debug": false,
+    "env": "Blackjack-v0",
+    "gamma": 0.99,
+    "log_interval": 50,
+    "m": 5,
+    "num_updates": 20,
+    "odir": "out/experiment_2019.05.02_17.51.39",
+    "save_interval": 1000,
+    "seed": 543
+}

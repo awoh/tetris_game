@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 import logging
 logger = logging.getLogger(__name__)
@@ -72,7 +73,7 @@ class BaseValue(object):
 # Implement DUPolicy for tetris initial state rollouts
 class DUPolicy(BasePolicy):
 
-    def __init__(self, **kwargs):
+    def __init__(self,env, num_features, num_actions):
          # [land_height, eroded_cells, row_transitions, Col_transitions, holes, wells, hole depth, rows w/holes]
         self.weights = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04]
 

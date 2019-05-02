@@ -12,11 +12,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 # local imports
-import environments
+from environments import FeatureWrapper
 from algorithm import CBMPI
 import models
 
 from gym_tetris import TetrisEnvironment
+
 
 def eval_policy(env, plc):
     """takes in environment and policy and runs game """
@@ -67,11 +68,12 @@ if __name__ == '__main__':
               '###################################################'
     logger.info(log_str)
 
-    quit()
+    # quit()
     # TODO - Modify the code below
     # THERE MAY BE ERRORS -- CHECK THIS
 
     num_actions = 40    # there are 40 potential actions
+    num_eval = 20
     num_features = 9 # DU + square piece
     init_plc = models.DUPolicy(env,num_features, num_actions)
     critic,plc = models.LinearVFA(num_features),models.LinearPolicy(env,num_features, num_actions)
@@ -79,7 +81,7 @@ if __name__ == '__main__':
 
     algo = CBMPI(plc,critic,train_config)
     # episode_results = np.array([]).reshape((0,6))     # will allow for training curve like in paper
-    episode_results = np.array([]).reshape((train_config['num_updates']*num_eval,4)) # allocate nujmpy array for all of iterations and evaluations initially, so can add more to it later
+    episode_results = np.empty(shape = [train_config['num_updates']*num_eval,4]) # allocate nujmpy array for all of iterations and evaluations initially, so can add more to it later
     # will want to
     cur_update = 0
     finished_episodes = 0
