@@ -4,7 +4,7 @@ import numpy as np
 import gym
 import logging
 logger = logging.getLogger(__name__)
-from tetris import TetrisEnvironment
+from gym_tetris import TetrisEnvironment
 
 # can just download premade tetris environment online
 
