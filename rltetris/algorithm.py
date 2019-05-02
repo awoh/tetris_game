@@ -74,7 +74,7 @@ class CBMPI(object):
         # you can pass extra args to be forwarded to _policy_loss_cbmpi (see docs)
         policy_loss = lambda x : _policy_loss_cbmpi(x,batch)        # x is the weights of the policy, may need to bind policy too
         inital_params = self._policy.get_params()
-        sigma0 =
+        sigma0 = 1
         new_params, es = cma.fmin2(policy_loss,inital_params,sigma0)   # need weights of features for every action (so new_params = feat*action)
         # PAPER ALSO HAS PARAMS FOR OTHER PARAMS FOR FMIN: p, eta (greek h), n....not sure how these go into cma.fmin2()
 

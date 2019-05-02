@@ -8,8 +8,8 @@ class BasePolicy(object):
     """
     Base policy class
     """
-    def __init__(self,**kwargs):
-        self.weights = [0]  # weights are a matrix of featuers * num_actions
+    def __init__(self,env, num_features, num_actions):
+        self.weights = [[0]*num_features]*num_actions  # weights are a matrix of featuers * num_actions
         # SHOULD PASS IN ENVIRONMENT!!
         self._env = env        # policy, want possible actions, so pass in environment
 
@@ -49,9 +49,9 @@ class BaseValue(object):
     """
     Base value class
     """
-    def __init__(self,**kwargs):
+    def __init__(self,num_features,**kwargs):
         self.model = LinearRegression()
-        self.weights = [0]
+        self.weights = [0]*num_features
         pass
 
     def save_model(self,path):
@@ -90,7 +90,9 @@ class DUPolicy(BasePolicy):
             else:
                 new_s = self._env.step(i)
                 next_states[i] = new_s
-        action = np.argmax([eval(self.weights, s) for s in next_states])   #get index for best state, i.e. best action
+        best_actions = np.argmax([eval(self.weights, s) for s in next_states])   #get index for best state, i.e. best action
+
+        action = np.random.choice(best_actions)    # need to get random one in best_actions
         return action
 
 
@@ -100,7 +102,8 @@ class LinearPolicy(BasePolicy):
 
     def action(self,state):
         """Returns index of action to use """
-        action = np.argmax([eval(w, state) for w in self.weights])
+        best_actions = np.argmax([eval(w, state) for w in self.weights])
+        action = np.random.choice(best_actions)    # need to get random one in best_actions
         return action
 
 

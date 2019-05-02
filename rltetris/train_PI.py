@@ -16,6 +16,8 @@ import environments
 from algorithm import CBMPI
 import models
 
+from gym-tetris/tetris import TetrisEnvironment
+
 def eval_policy(env, plc):
     """takes in environment and policy and runs game """
     env.reset()
@@ -68,7 +70,13 @@ if __name__ == '__main__':
     quit()
     # TODO - Modify the code below
     # THERE MAY BE ERRORS -- CHECK THIS
-    init_plc,critic,plc = models.DUPolicy(),models.LinearVFA(),models.LinearPolicy(env)
+
+    num_actions = 40    # there are 40 potential actions
+    num_features = 9 # DU + square piece
+    init_plc = models.DUPolicy(env,num_features, num_actions)
+    critic,plc = models.LinearVFA(num_features),models.LinearPolicy(env,num_features, num_actions)
+
+
     algo = CBMPI(plc,critic,train_config)
     # episode_results = np.array([]).reshape((0,6))     # will allow for training curve like in paper
     episode_results = np.array([]).reshape((train_config['num_updates']*num_eval,4)) # allocate nujmpy array for all of iterations and evaluations initially, so can add more to it later
@@ -88,8 +96,7 @@ if __name__ == '__main__':
 
         # pass start states to function to get samples to update value function
         # SHOULD COMBINE V_HATS AND V_STATES IN THE GET_VH SO JUST ONE BATCH OUTPUT!!
-        num_actions = 40    # there are 40 potential actions
-        num_features = 9 # DU + square piece
+
         v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
         q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
 
