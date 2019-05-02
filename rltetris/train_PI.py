@@ -102,18 +102,18 @@ if __name__ == '__main__':
         # run and save results
         for i in range(num_eval):
             # [(iteration_number,discounted_reward,lines_cleared)]
-            res = eval_policy(env,plc)
+            result = eval_policy(env,plc)
 
             finished_episodes += 1
             # total_samples = cur_update * samples_per_update   #WHAT IS THIS???
             # stores: total_updates, total_episodes, total_samples, current_episode_length, current_total_reward, current_cumulative_reward
 
             # after update, generate list (for each of evaluations, put entry in list saying (iteration, lines cleared, discounted reward)
-            episode_results[finished_episodes] = np.array([cur_update,finished_episodes,total_samples,res],ndmin=2)
+            episode_results[finished_episodes] = np.array([cur_update,finished_episodes,result],ndmin=2)
             # episode_results = np.concatenate((episode_results,np.array([cur_update,finished_episodes,total_samples,res],ndmin=2)),axis=0)
             # episode_results = np.concatenate((episode_results,np.array([cur_update,finished_episodes,total_samples,el,tr,cr],ndmin=2)),axis=0)
             np.save(episode_results_path, episode_results)
-            logger.info('Update Number: %06d, Finished Episode: %04d ---  Length: %.3f, TR: %.3f, CDR: %.3f'% (cur_update,finished_episodes,el,tr,cr))
+            logger.info('Update Number: %06d, Finished Episode: %04d ---  Result: %.3f'% (cur_update,finished_episodes,result))
 
         # checkpoint
         if cur_update % train_config['save_interval'] == 0:

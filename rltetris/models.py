@@ -21,13 +21,18 @@ class BasePolicy(object):
         # loading and saving from disk
         raise NotImplementedError()
 
-    def action(self,*args,**kwargs):
-        # choose argmax of policy
-        # want a vector of actions that are/aren't allowed and then only
-        # do argmax on ones that are allowed.
-        # multiply state * every array in weights and take max of those
-        np.argmax()
-        return action
+    # def action(self,*args,**kwargs):
+    #     # choose argmax of policy
+    #     # want a vector of actions that are/aren't allowed and then only
+    #     # do argmax on ones that are allowed.
+    #     # multiply state * every array in weights and take max of those
+    #     np.argmax()
+    #     return action
+
+    def eval(weights, state):
+    """ calculates score for given weights and state"""
+        return np.dot(weights, state)
+
 
     def get_params(self):
         # get weights
@@ -71,15 +76,32 @@ class DUPolicy(BasePolicy):
          # [land_height, eroded_cells, row_transitions, Col_transitions, holes, wells, hole depth, rows w/holes]
         self.weights = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04]
 
-    def eval():
-        # GO THROUGH EVERY STATE AND CALCULATE WITH WEIGHTS???? HOW DO THEY DO IT???
-        pass
+
+    def action(self,state):
+        # choose argmax of policy
+        # want a vector of actions that are/aren't allowed and then only
+        # do argmax on ones that are allowed.
+        # multiply state * every array in weights and take max of those
+        next_states = [0]*len(state)
+        A = self._env.get_action_set()
+        for i in range(len(A)):
+            if A[i] == 0:
+                next_states[i] = [-sys.maxsize -1]*len(state)    # make horrible score so won't pick
+            else:
+                new_s = self._env.step(i)
+                next_states[i] = new_s
+        action = np.argmax([eval(self.weights, s) for s in next_states])   #get index for best state, i.e. best action
+        return action
 
 
 # Extend classes above to implement policies, and value function approx
 class LinearPolicy(BasePolicy):
     # policy.act
-    pass
+
+    def action(self,state):
+        """Returns index of action to use """
+        action = np.argmax([eval(w, state) for w in self.weights])
+        return action
 
 
 class LinearVFA(BaseValue):
@@ -91,8 +113,6 @@ class LinearVFA(BaseValue):
     out: the outputs to the regression (values)
      """
         self.model.fit(in, out)
-
-
 
 
 

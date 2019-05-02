@@ -55,19 +55,16 @@ def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
         # for every possible action from state s, make action and then follow policy for m steps
         for j in range(len(A)):
             tot_Q = 0
-            a = A[j]
 
             # if action not possible...
-            if a == 0:
+            if A[j] == 0:
                 # q_batch[i][j] = [reward, S_m]
                 # q_hats[(i,j)] = reward   # assign for given state, action pair, q_hat value
                 # s_ms[(i,j)] = S_m
                 continue
-
-            action = env._engine.action_map[j]
             # build M rollouts  (get rewards for all future states (1 -> m+1))
             # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
-            S_m, reward = rollout_from_state(env, curr_state, plc, critic m+1, gamma, action)   # get rollout for state
+            S_m, reward = rollout_from_state(env, curr_state, plc, critic m+1, gamma, j)   # get rollout for state
             q_batch[i][j] = [S_m, reward]
 
     q_batch = np.array(q_batch)
@@ -102,7 +99,7 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
             # use wrapper environemnt, so S_i is really set of reatures
             next_move = plc.action(S_i)
 
-        env_state, curr_reward, _, _ = env.step(action)
+        env_state, curr_reward, _, _ = env.step(next_move)
 
         # if reached end of game before doing m steps
         if env._terminal:
