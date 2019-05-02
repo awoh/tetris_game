@@ -6,7 +6,6 @@ import random
 import copy
 from gym_tetris import TetrisEnvironment
 from gym_tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
-from environment import TetrisEnvironment
 logger = logging.getLogger(__name__)
 
 

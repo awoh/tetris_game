@@ -2,7 +2,7 @@ import numpy as np
 from enum import Enum
 import random
 
-from utils import memoized_as_tuple
+from gym_tetris.utils1 import memoized_as_tuple
 
 
 _shapeCoord = (
