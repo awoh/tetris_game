@@ -25,9 +25,9 @@ class CBMPI(object):
     # omega0 - initial param
     # batch - train data
     def _policy_loss_cbmpi(self, omega0,batch):
-    """Loss function for CBMI algorithms. Returns the empirical error for a dataset
-        Used for evaluating policies in CMA-ES
-    """
+        """Loss function for CBMI algorithms. Returns the empirical error for a dataset
+            Used for evaluating policies in CMA-ES
+        """
         N = len(batch)
         self._policy = self._policy.set_params(omega0) #replace policy with input policy for loss
         for i in range(N):
@@ -61,11 +61,11 @@ class CBMPI(object):
         for i in range(len(q_batch)):
             state_q_len = len(q_batch[i])
             for j in range(state_q_len):
-                estimated_q_val = self._critic.sample(q_batch[i][j][0]) + q_batch[i][j][1]]
+                estimated_q_val = self._critic.sample(q_batch[i][j][0]) + q_batch[i][j][1]
                 q_batch[i][j][1] = estimated_q_val
         len_state = len(init_states[0])
 
-        batch = [ [[0]*(len_state), [0*](state_q_len)] ] *len(q_batch)   #each inner array is: [S_i, [Q...]]
+        batch = [ [[0]*(len_state), [0]*(state_q_len)] ] *len(q_batch)   #each inner array is: [S_i, [Q...]]
         for i in range(len(q_batch)):
             batch[i][0] =  init_states[i]
             batch[i][1] =  q_batch[i][:,1]   #all q values for that state

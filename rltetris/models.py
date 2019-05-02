@@ -30,7 +30,7 @@ class BasePolicy(object):
     #     return action
 
     def eval(weights, state):
-    """ calculates score for given weights and state"""
+        """ calculates score for given weights and state"""
         return np.dot(weights, state)
 
 
@@ -110,12 +110,12 @@ class LinearPolicy(BasePolicy):
 class LinearVFA(BaseValue):
 
 
-    def fit(in, out):
-    """ fit the model using parameters
-    in: the inputs to the regresssion (states/features)
-    out: the outputs to the regression (values)
-     """
-        self.model.fit(in, out)
+    def fit(input, out):
+        """ fit the model using parameters
+        input: the inputs to the regresssion (states/features)
+        out: the outputs to the regression (values)
+        """
+        self.model.fit(input, out)
 
 
 
