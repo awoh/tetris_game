@@ -65,7 +65,8 @@ class TetrisEngine(object):
             self.state.y = -minY
             self.state.direction = 0
             self.state.currentShape = self.state.nextShape
-            self.state.nextShape = Shape(random.randint(1, 7))
+            # self.state.nextShape = Shape(random.randint(1, 7))
+            self.state.nextShape = Shape(5)
             result = True
         else:
             self.state.currentShape = Shape()
