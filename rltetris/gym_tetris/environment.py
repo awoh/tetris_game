@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # Local imports
 
-from tetris import TetrisEngine
+from gym_tetris.tetris import TetrisEngine
 
 def register_envs():
     register(

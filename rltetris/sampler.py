@@ -4,8 +4,8 @@ import numpy as np
 import logging
 import random
 import copy
-from gym-tetris import TetrisEnvironment
-from gym-tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
+from gym_tetris import TetrisEnvironment
+from gym_tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
 from environment import TetrisEnvironment
 logger = logging.getLogger(__name__)
 

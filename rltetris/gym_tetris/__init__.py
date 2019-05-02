@@ -1,2 +1,1 @@
-
 from .environment import TetrisEnvironment
