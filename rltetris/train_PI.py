@@ -89,7 +89,7 @@ if __name__ == '__main__':
         # pass start states to function to get samples to update value function
         # SHOULD COMBINE V_HATS AND V_STATES IN THE GET_VH SO JUST ONE BATCH OUTPUT!!
         num_actions = 40    # there are 40 potential actions
-        num_features = 10
+        num_features = 9 # DU + square piece
         v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
         q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
 

@@ -35,7 +35,7 @@ def get_vh(env, D_k, plc,m,gamma, num_features):
     # S_ms = [[0]*num_features]*len(D_k)
     # go thru every state in D_k
     for i in range(len(D_k)):
-        S_m, reward = rollout_from_state(env, D_k[i], plc,critic, m, gamma)   # get rollout for state
+        S_m, reward = rollout_from_state(env, D_k[i], plc, m, gamma)   # get rollout for state
         v_batch[i] = [S_m, reward]
     v_batch = np.array(v_batch)
     return v_batch
@@ -64,7 +64,7 @@ def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
                 continue
             # build M rollouts  (get rewards for all future states (1 -> m+1))
             # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
-            S_m, reward = rollout_from_state(env, curr_state, plc, critic m+1, gamma, j)   # get rollout for state
+            S_m, reward = rollout_from_state(env, curr_state, plc, m+1, gamma, j)   # get rollout for state
             q_batch[i][j] = [S_m, reward]
 
     q_batch = np.array(q_batch)

@@ -71,7 +71,8 @@ class TetrisEnvironment(gym.Env):
         if self._terminal:
             raise RuntimeError('Game is already over')
         # update state
-        r_tp1 = self._engine.moveRotateDrop(action[0],action[1])
+        a = self._engine.action_map[action]
+        r_tp1 = self._engine.moveRotateDrop(a[0],a[1])
 
         self._terminal = self._engine.done
         return self.get_features, r_tp1,self._terminal,{}
