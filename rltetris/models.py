@@ -11,7 +11,8 @@ class BasePolicy(object):
     def __init__(self,**kwargs):
         self.weights = [0]  # weights are a matrix of featuers * num_actions
         # SHOULD PASS IN ENVIRONMENT!!
-        pass
+        self._env = env        # policy, want possible actions, so pass in environment
+
 
     def save_model(self,path):
         raise NotImplementedError()
@@ -23,9 +24,10 @@ class BasePolicy(object):
     def action(self,*args,**kwargs):
         # choose argmax of policy
         # want a vector of actions that are/aren't allowed and then only
-        # do argmax on ones that are alowed.
-        # policy, want possible actions, so pass in environment
-        raise NotImplementedError()
+        # do argmax on ones that are allowed.
+        # multiply state * every array in weights and take max of those
+        np.argmax()
+        return action
 
     def get_params(self):
         # get weights
@@ -68,6 +70,7 @@ class DUPolicy(BasePolicy):
     def __init__(self, **kwargs):
          # [land_height, eroded_cells, row_transitions, Col_transitions, holes, wells, hole depth, rows w/holes]
         self.weights = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04]
+
     def eval():
         # GO THROUGH EVERY STATE AND CALCULATE WITH WEIGHTS???? HOW DO THEY DO IT???
         pass
