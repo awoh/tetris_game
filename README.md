@@ -4,7 +4,7 @@
 
 # TODO:
 
-* implement RL (mdp_ai.py)...
+* Fix features in TetrisEngine (line 154: self.last_piece_drop_coords)
 
 # DONE:
 
