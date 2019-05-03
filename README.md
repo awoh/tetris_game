@@ -10,6 +10,11 @@
 
 * Make it create pieces in batches of 7
 
+# NOTE:
+* to run tetris folder (i.e. game just on its own, without any of our train_PI files), need to change import in core.py 
+        - from: from gym_tetris.utils1 import memoized_as_tuple 
+        - to: from utils1 import memoized_as_tuple 
+
 # PAPERS
 
 * Temporal Differences-Based Policy Iteration and Applications in Neuro-Dynamic Programming
