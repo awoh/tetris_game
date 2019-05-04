@@ -12,18 +12,21 @@ logger = logging.getLogger(__name__)
 # Do rollout using policy to get random states
 def sample_random_states(env,policy,N):
     # Step 0 - Allocate return arrays
-    states = np.empty(shape = N)
-
+    states = np.empty(shape = N, dtype=TetrisState)
+    # random.seed(1)
+    x = random.randint(5,5)    # number of moves to make when creating init state
+    print("X: "+ str(x))
     # Step 2 - run the environment and collect final states
     for i in range(N):
         env.reset() # reset environment
 
         # make x number of moves following DU policy
         for j in range(x):
-            action = policy.action()
-            new_state = env.step(action)    # get state of env
+            action = policy.action(env._engine.state)
+            # print("ACTION: " + str(action))
+            env.step(action)    # get state of env
 
-        states[i] = new_state
+        states[i] = env.state
 
     return states
 
@@ -85,6 +88,7 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
     # CURRENTLY CREATING NEW TETRIS STATE
     S_i = copy_state(start)
     env.set_state(S_i)
+    env_state = env.state()
 
     tot_reward = 0
     curr_reward = 0 # PROBABLY SHOULD CHANGE???????????
@@ -97,28 +101,28 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
         else:
             # use policy
             # use wrapper environemnt, so S_i is really set of reatures
-            next_move = plc.action(S_i)
+            next_move = plc.action(env_state)
 
         env_state, curr_reward, _, _ = env.step(next_move)
 
         # if reached end of game before doing m steps
         if env._terminal:
-            return S_i, tot_reward
+            return env_state, tot_reward
 
         # curr_reward = S_i.moveRotateDrop(next_move[0], next_move[1])    # make move, cur_reward = lines cleared by action
         tot_reward += (gamma**i) * curr_reward    # add gamma*reward to sum of rewards
 
     # use policy, and make final move
     next_move = plc.action(S_i)
-    env.step(next_move)
+    env_state,_,_,_ = env.step(next_move)
 
     env.set_state(start)        # reset environment to start state
-    return S_i, tot_reward
+    return env_state, tot_reward
 
 
 def copy_state(s):
-    copy_board = ndarray.copy(s.board)
-    new_s = TetrisState(copy_board,s.x,s.y,s.direction,s.currentShape,s.nextShape)
+    copy_board = np.ndarray.copy(s.board)
+    new_s = TetrisState(copy_board,s.x,s.y,s.direction,s.currentShape,s.nextShape, s.width)
     return new_s
 
     # np.copyto(copy.board, board.board)

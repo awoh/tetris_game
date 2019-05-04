@@ -15,10 +15,14 @@ class FeatureWrapper(object):
         self._env = env
 
     def set_state(self, state):
-        self._env.setState(state)
+        self._env.set_state(state)
     def step(action):
-        S_tp1,t_tp1,terminal,inf = self._env.step(action)
+        s_tp1,t_tp1,terminal,inf = self._env.step(action)
         board_features = self._env.get_features()
         return board_features,r_tp1,terminal,inf
     def get_action_set(self):
         return self._env.get_action_set()
+
+    @property
+    def state(self):
+        return self._env.get_features()

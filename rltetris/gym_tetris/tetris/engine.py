@@ -7,14 +7,16 @@ import math
 from . import Shape, ShapeKind
 
 class TetrisState(object):
-    def __init__(self,board,x,y,direction,currentShape,nextShape):
+    def __init__(self,board,x,y,direction,currentShape,nextShape, width):
         self.board = board
         self.x = x
         self.y = y
         self.direction = direction
         self.currentShape = currentShape
         self.nextShape = nextShape
-        self.width = 10
+        self.nextShape = Shape(5)    #FOR TRIVIAL TETRIS GAME!!
+
+        self.width = width
         self.height = 22
 
     def getValue(self, x, y):
@@ -28,13 +30,16 @@ class TetrisEngine(object):
     def __init__(self,width=10,height=22):
         self.width = width
         self.height = height
-        self.state = TetrisState(np.zeros((height,width),dtype=np.intc),-1,-1,0,Shape(),Shape.random())
+        # self.state = TetrisState(np.zeros((height,width),dtype=np.intc),-1,-1,0,Shape(),Shape.random(), width)
+        self.state = TetrisState(np.zeros((height,width),dtype=np.intc),-1,-1,0,Shape(),Shape.random(), width) #FOR TRIVIAL GAME!! (ONLY SQUARE)
         self.shapeStat = [0] * 8
         self.done = False
         self.height_of_last_piece = 22
         self.num_last_lines_cleared = 0
         self.num_last_piece_cleared = 0
-                
+        self.last_piece_drop_coords = []
+
+
         action_list = []
         for r in range(4):
             for c in range(self.width):
@@ -50,9 +55,10 @@ class TetrisEngine(object):
 
     def reset(self):
         self.state = TetrisState(np.zeros((self.height,self.width),dtype=np.intc),
-            -1,-1,0,Shape(),Shape.random())
+            -1,-1,0,Shape(),Shape.random(), self.width)
         self.createNewPiece()
         self.done = False
+        return self.state
 
     def getCurrentShapeCoord(self):
         return self.state.currentShape.getCoords(self.state.direction, self.state.x, self.state.y)
@@ -66,7 +72,7 @@ class TetrisEngine(object):
             self.state.direction = 0
             self.state.currentShape = self.state.nextShape
             # self.state.nextShape = Shape(random.randint(1, 7))
-            self.state.nextShape = Shape(5)
+            self.state.nextShape = Shape(5)   #FOR TRIVIAL STATE!!
             result = True
         else:
             self.state.currentShape = Shape()
@@ -150,10 +156,11 @@ class TetrisEngine(object):
         num_full = self.height - num_left
 
         self.num_last_piece_cleared = 0
+
         for coord in self.last_piece_drop_coords:
             if not rmask[coord[1]]:
                 self.num_last_piece_cleared += 1
-        print("REMOVED: " + str(self.num_last_piece_cleared))
+        # print("REMOVED: " + str(self.num_last_piece_cleared))
 
         if num_full > 0:
             new_board = np.zeros_like(self.state.board)
@@ -193,32 +200,39 @@ class TetrisEngine(object):
         self.features.append(self.getHoleDepths())
         self.features.append(self.countRowsWithHoles())  # rows with holes
 
-        # BERTSEKAS FEATURES (+num holes from above)
-        # height of each column
-        temp_heights = self.getColHeights() # 10
-        for i in range(len(temp_heights)):
-            self.features.append(temp_heights[i])
-
-        # height difference between columns
-        temp_differences = self.getHeightDifferences() # 9
-        for i in range(len(temp_differences)):
-            self.features.append(temp_differences[i])
-
-        self.features.append(self.getMaxHeight())
-        self.features.append(1) # constant feature ???
-
-
-        # pattern diversity feature ???
-        self.features.append(self.countPatternDiversity())
-
-        # rbf features (5)
-        for i in range(5):
-            c = np.mean(np.array([temp_heights]))
-            h = self.height
-            numer = -1 * abs(c - (i * h)/4)**2
-            denom = 2 * ((h / 5)**2)
-            rbf_height = math.exp(-1*((c - (i*h)/4)**2)/(2*(h/5)**2))
-            self.features.append(numer / denom)
+        # # BERTSEKAS FEATURES (+num holes from above)
+        # # height of each column
+        # temp_heights = self.getColHeights() # 10
+        # for i in range(len(temp_heights)):
+        #     self.features.append(temp_heights[i])
+        #
+        # # height difference between columns
+        # temp_differences = self.getHeightDifferences() # 9
+        # for i in range(len(temp_differences)):
+        #     self.features.append(temp_differences[i])
+        #
+        # self.features.append(self.getMaxHeight())
+        # self.features.append(1) # constant feature ???
+        #
+        #
+        # # pattern diversity feature ???
+        # self.features.append(self.countPatternDiversity())
+        #
+        # # rbf features (5)
+        # for i in range(5):
+        #     c = np.mean(np.array([temp_heights]))
+        #     h = self.height
+        #     numer = -1 * abs(c - (i * h)/4)**2
+        #     denom = 2 * ((h / 5)**2)
+        #     rbf_height = math.exp(-1*((c - (i*h)/4)**2)/(2*(h/5)**2))
+        #     self.features.append(numer / denom)
+        #
+        # PIECE FEATURES (7)
+        # pieces = [0]*7
+        # pieces[self.state.currentShape.kind] = 1
+        # EASYL TETRIS PIECE (i.e. just square piece)
+        pieces = [1]
+        self.features += pieces
 
         return self.features
 

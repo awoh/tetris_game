@@ -1,5 +1,7 @@
 import numpy as np
+import sys
 from sklearn.linear_model import LinearRegression
+from gym_tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
 
 import logging
 logger = logging.getLogger(__name__)
@@ -75,24 +77,29 @@ class DUPolicy(BasePolicy):
 
     def __init__(self,env, num_features, num_actions):
          # [land_height, eroded_cells, row_transitions, Col_transitions, holes, wells, hole depth, rows w/holes]
-        self.weights = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04]
-
+        self.weights = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04,0]
+        # need weights to correspond to the number of features (so 9 for easy board)
+        self._env = env
 
     def action(self,state):
         # choose argmax of policy
         # want a vector of actions that are/aren't allowed and then only
         # do argmax on ones that are allowed.
         # multiply state * every array in weights and take max of those
-        next_states = [0]*len(state)
         A = self._env.get_action_set()
+
+        scores = np.empty(shape = len(A))
         for i in range(len(A)):
             if A[i] == 0:
-                next_states[i] = [-sys.maxsize -1]*len(state)    # make horrible score so won't pick
+                scores[i] = -sys.maxsize -1
             else:
-                new_s = self._env.step(i)
-                next_states[i] = new_s
-        best_actions = np.argmax([eval(self.weights, s) for s in next_states])   #get index for best state, i.e. best action
+                new_s = TetrisState(np.ndarray.copy(state.board),state.x,state.y,state.direction,state.currentShape,state.nextShape, state.width)
+                self._env.set_state(new_s)  #set the copied board as the state
 
+                self._env.step(i)
+                scores[i] = np.dot(self.weights, self._env.get_features())
+
+        best_actions = np.argwhere(scores == np.amax(scores)).flatten()
         action = np.random.choice(best_actions)    # need to get random one in best_actions
         return action
 
@@ -100,10 +107,13 @@ class DUPolicy(BasePolicy):
 # Extend classes above to implement policies, and value function approx
 class LinearPolicy(BasePolicy):
     # policy.act
+    # weights for this policy are a 1D array ( flattened from 2D array of features * actions)
 
     def action(self,state):
-        """Returns index of action to use """
-        best_actions = np.argmax([eval(w, state) for w in self.weights])
+        """State is list of features for the state. Returns index of action to use """
+        vector_weights = np.reshape(self.weights, newshape = (40, len(state))) #number of actions is 40
+        action_scores = [np.dot(w, state) for w in vector_weights]
+        best_actions = np.argwhere(action_scores == np.amax(action_scores)).flatten()
         action = np.random.choice(best_actions)    # need to get random one in best_actions
         return action
 

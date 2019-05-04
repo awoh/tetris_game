@@ -78,6 +78,7 @@ class CBMPI(object):
         new_params, es = cma.fmin2(policy_loss,inital_params,sigma0)   # need weights of features for every action (so new_params = feat*action)
         # PAPER ALSO HAS PARAMS FOR OTHER PARAMS FOR FMIN: p, eta (greek h), n....not sure how these go into cma.fmin2()
 
+        # NEW PARAMS IS OF LENGTH FEATURES * NUM_ACTIONS
         self._policy.set_params(new_params)
 
         raise NotImplementedError()

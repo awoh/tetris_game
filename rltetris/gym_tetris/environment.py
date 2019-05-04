@@ -16,7 +16,7 @@ from .tetris import TetrisEngine
 def register_envs():
     register(
         id='Tetris-v0',
-        entry_point='environment:TetrisEnvironment',
+        entry_point='gym_tetris.environment:TetrisEnvironment',
         kwargs={"width": 10, "height": 22, "num_shapes": 8}
     )
 
@@ -117,7 +117,7 @@ class TetrisEnvironment(gym.Env):
 
         Returns: list of size 40, 0 = action not possible, 1 = action possible at every position
         """
-        A = np.array(shape=40)  # r = rotation, c = column, minY= offset from top of board
+        A = np.empty(shape=40)  # r = rotation, c = column, minY= offset from top of board
         for r in range(4):
             for c in range(self._engine.width):
                 # minX, maxX, minY, maxY = board.nextShape.getBoundingOffsets(0)

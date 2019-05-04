@@ -90,11 +90,14 @@ if __name__ == '__main__':
 
     # create wrapper for environment
     w_env = FeatureWrapper(env)
+    m = train_config['m']
+    gamma = train_config['gamma']
 
     while cur_update < train_config['num_updates']:
 
         # get set D_k (get start states), use DU Policy
         init_states = smp.sample_random_states(env, init_plc, train_config['N'])
+        print(init_states)
 
         # pass start states to function to get samples to update value function
         # SHOULD COMBINE V_HATS AND V_STATES IN THE GET_VH SO JUST ONE BATCH OUTPUT!!
