@@ -24,12 +24,13 @@ class CBMPI(object):
     # NOTE - You may want to add additional arguments
     # omega0 - initial param
     # batch - train data
-    def _policy_loss_cbmpi(self, omega0,batch):
+    def _policy_loss_cbmpi(self, omega0,batch,policy):
         """Loss function for CBMI algorithms. Returns the empirical error for a dataset
             Used for evaluating policies in CMA-ES
         """
         N = len(batch)
-        self._policy = self._policy.set_params(omega0) #replace policy with input policy for loss
+        policy.set_params(omega0) #replace policy with input policy for loss
+        loss =0
         for i in range(N):
             state = batch[i][0]
             q_hats = np.array(batch[i][1])  #list of all q_hats for given state
@@ -37,11 +38,11 @@ class CBMPI(object):
             max_q = np.amax(q_hats) # get max Q(s_i, a)
 
             # will give integer corresponding to action --> tells you index of q_hat from array q_hats
-            policy_action = self._policy.action(state)
+            policy_action = policy.action(state)
             policy_q = q_hats[policy_action]
             q_diff = max_q - policy_q
 
-            loss += q_dif
+            loss += q_diff
 
         loss = loss/N
         return loss
@@ -61,7 +62,7 @@ class CBMPI(object):
         for i in range(len(q_batch)):
             state_q_len = len(q_batch[i])
             for j in range(state_q_len):
-                estimated_q_val = self._critic.sample(q_batch[i][j][0]) + q_batch[i][j][1]
+                estimated_q_val = self._critic.eval(q_batch[i][j][0]) + q_batch[i][j][1]
                 q_batch[i][j][1] = estimated_q_val
         len_state = len(init_states[0])
 
@@ -72,29 +73,25 @@ class CBMPI(object):
 
         # This is where you need to call CMA-ES,  you need to give it an objective function to evaluate
         # you can pass extra args to be forwarded to _policy_loss_cbmpi (see docs)
-        policy_loss = lambda x : _policy_loss_cbmpi(x,batch)        # x is the weights of the policy, may need to bind policy too
+        policy_loss = lambda x : self._policy_loss_cbmpi(x,batch,self._policy)        # x is the weights of the policy, may need to bind policy too
         inital_params = self._policy.get_params()
         sigma0 = 1
-        new_params, es = cma.fmin2(policy_loss,inital_params,sigma0)   # need weights of features for every action (so new_params = feat*action)
+        new_params, es = cma.fmin2(policy_loss,self._policy.get_params(),sigma0)   # need weights of features for every action (so new_params = feat*action)
         # PAPER ALSO HAS PARAMS FOR OTHER PARAMS FOR FMIN: p, eta (greek h), n....not sure how these go into cma.fmin2()
 
         # NEW PARAMS IS OF LENGTH FEATURES * NUM_ACTIONS
         self._policy.set_params(new_params)
 
-        raise NotImplementedError()
 
     def update_critic(self,init_states,v_batch):
         """updating value function """
         # add estimatesd reward here
-        # v-hats is really the estimated reward
         for i in range(len(v_batch)):
             state = v_batch[i][0]
             roll_val = v_batch[i][1]
-            estimated_v_val = self._critic.sample(state) + roll_val
+            estimated_v_val = self._critic.eval(state) + roll_val
             v_batch[i][1] = estimated_v_val
 
         vals = v_batch[:,1]
-        # new_val = linear_model.LinearRegression()
-        self._critic.fit(init_states, vals)
-        new_params = self._critic.model.get_params()
-        self._critic.set_params(new_params)
+
+        self._critic.set_params(init_states, vals)

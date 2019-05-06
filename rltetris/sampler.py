@@ -9,23 +9,27 @@ from gym_tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
 logger = logging.getLogger(__name__)
 
 
-# Do rollout using policy to get random states
+
 def sample_random_states(env,policy,N):
+    """Does rollout using policy to get N random states"""
+
     # Step 0 - Allocate return arrays
     states = np.empty(shape = N, dtype=TetrisState)
-    # random.seed(1)
-    x = random.randint(5,5)    # number of moves to make when creating init state
-    print("X: "+ str(x))
+    x = random.randint(10,20)    # number of moves to make when creating init state
+
     # Step 2 - run the environment and collect final states
     for i in range(N):
         env.reset() # reset environment
 
         # make x number of moves following DU policy
         for j in range(x):
-            action = policy.action(env._engine.state)
+            if env._terminal:
+                break
+            action = policy.action(env.state)
             # print("ACTION: " + str(action))
             env.step(action)    # get state of env
 
+        # print(env.state.board)
         states[i] = env.state
 
     return states
@@ -86,6 +90,7 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
 
     # Step 1 - set start state
     # CURRENTLY CREATING NEW TETRIS STATE
+    env.reset()
     S_i = copy_state(start)
     env.set_state(S_i)
     env_state = env.state()
@@ -95,6 +100,8 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
 
     # Step 2 - Use for loop to run,  need to go from 0 to m-1, m is an upper bound (since game may end earlier)
     for i in range(m-1):
+
+        # print(env._env._engine.state.board)
         # Use start_action to optionally pass the start action. If it is None, policy should be used
         if start_action != None:
             next_move = start_action
@@ -102,6 +109,7 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
             # use policy
             # use wrapper environemnt, so S_i is really set of reatures
             next_move = plc.action(env_state)
+            # print("NEXT MOVE: " + str(next_move))
 
         env_state, curr_reward, _, _ = env.step(next_move)
 
@@ -110,10 +118,11 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
             return env_state, tot_reward
 
         # curr_reward = S_i.moveRotateDrop(next_move[0], next_move[1])    # make move, cur_reward = lines cleared by action
+        # print("curr reward: " + str(curr_reward))
         tot_reward += (gamma**i) * curr_reward    # add gamma*reward to sum of rewards
 
     # use policy, and make final move
-    next_move = plc.action(S_i)
+    next_move = plc.action(env_state)
     env_state,_,_,_ = env.step(next_move)
 
     env.set_state(start)        # reset environment to start state
@@ -122,7 +131,9 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
 
 def copy_state(s):
     copy_board = np.ndarray.copy(s.board)
-    new_s = TetrisState(copy_board,s.x,s.y,s.direction,s.currentShape,s.nextShape, s.width)
+    new_s = TetrisState(copy_board,s.x,s.y,s.direction,s.currentShape,s.nextShape,
+                        s.width,s.height_of_last_piece,s.num_last_lines_cleared,
+                        s.num_last_piece_cleared,s.last_piece_drop_coords)
     return new_s
 
     # np.copyto(copy.board, board.board)

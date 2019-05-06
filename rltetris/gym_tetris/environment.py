@@ -17,7 +17,7 @@ def register_envs():
     register(
         id='Tetris-v0',
         entry_point='gym_tetris.environment:TetrisEnvironment',
-        kwargs={"width": 10, "height": 22, "num_shapes": 8}
+        kwargs={"width": 6, "height": 22, "num_shapes": 8}
     )
 
 
@@ -34,7 +34,7 @@ class TetrisEnvironment(gym.Env):
         obs2 = spaces.Box(low=0, high=num_shapes, shape=(height, width), dtype=np.intc)
         self.observation_space = spaces.Tuple((obs1,obs2))
         self.action_space = spaces.MultiDiscrete([4,width])
-        self._engine = TetrisEngine()
+        self._engine = TetrisEngine(width, height)
         self._terminal = False
 
         # initial state config
@@ -75,7 +75,6 @@ class TetrisEnvironment(gym.Env):
         r_tp1 = self._engine.moveRotateDrop(a[0],a[1])
 
         self._terminal = self._engine.done
-        return self.get_features, r_tp1,self._terminal,{}
         return self.state,r_tp1,self._terminal,{}
 
     def get_features(self):
@@ -89,6 +88,7 @@ class TetrisEnvironment(gym.Env):
         observation (object): the initial observation of the space.
         """
         self._time = 0
+        self._terminal = False
         return self._engine.reset()
 
     def set_state(self, state):
@@ -117,15 +117,16 @@ class TetrisEnvironment(gym.Env):
 
         Returns: list of size 40, 0 = action not possible, 1 = action possible at every position
         """
-        A = np.empty(shape=40)  # r = rotation, c = column, minY= offset from top of board
+        num_actions = self._engine.width * 4
+        A = np.empty(shape=num_actions)  # r = rotation, c = column, minY= offset from top of board
         for r in range(4):
             for c in range(self._engine.width):
                 # minX, maxX, minY, maxY = board.nextShape.getBoundingOffsets(0)
                 minX, maxX, minY, maxY = self._engine.state.currentShape.getBoundingOffsets(r)
                 if(self._engine.tryMoveCurrent(r, c, -minY)):
-                    A[r*10 +c] = 1 # can make move
+                    A[r*self._engine.width +c] = 1 # can make move
                 else:
-                    A[r*10+c] = 0 # action not possible
+                    A[r*self._engine.width+c] = 0 # action not possible
         return A
 
 register_envs()

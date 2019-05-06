@@ -7,17 +7,22 @@ import math
 from . import Shape, ShapeKind
 
 class TetrisState(object):
-    def __init__(self,board,x,y,direction,currentShape,nextShape, width):
+    def __init__(self,board,x,y,direction,currentShape,nextShape, width,last_piece_h, last_lines_clear, last_piece_clear,last_piece_coord):
         self.board = board
         self.x = x
         self.y = y
         self.direction = direction
         self.currentShape = currentShape
-        self.nextShape = nextShape
+        # self.nextShape = nextShape
         self.nextShape = Shape(5)    #FOR TRIVIAL TETRIS GAME!!
 
         self.width = width
         self.height = 22
+
+        self.height_of_last_piece = 22     # ATTRIBUTES FOR FEATURES!!
+        self.num_last_lines_cleared = 0
+        self.num_last_piece_cleared = 0
+        self.last_piece_drop_coords = np.empty(shape=4, dtype=(int,2))
 
     def getValue(self, x, y):
         return self.board[y,x]
@@ -30,14 +35,10 @@ class TetrisEngine(object):
     def __init__(self,width=10,height=22):
         self.width = width
         self.height = height
-        # self.state = TetrisState(np.zeros((height,width),dtype=np.intc),-1,-1,0,Shape(),Shape.random(), width)
-        self.state = TetrisState(np.zeros((height,width),dtype=np.intc),-1,-1,0,Shape(),Shape.random(), width) #FOR TRIVIAL GAME!! (ONLY SQUARE)
+        self.state = TetrisState(np.zeros((height,width),dtype=np.intc),-1,-1,0,Shape(),Shape.random(), width,22,0,0,np.empty(shape=4, dtype=(int,2)))
         self.shapeStat = [0] * 8
         self.done = False
-        self.height_of_last_piece = 22
-        self.num_last_lines_cleared = 0
-        self.num_last_piece_cleared = 0
-        self.last_piece_drop_coords = []
+
 
 
         action_list = []
@@ -55,7 +56,7 @@ class TetrisEngine(object):
 
     def reset(self):
         self.state = TetrisState(np.zeros((self.height,self.width),dtype=np.intc),
-            -1,-1,0,Shape(),Shape.random(), self.width)
+            -1,-1,0,Shape(),Shape.random(), self.width,22,0,0,np.empty(shape=4, dtype=(int,2)))
         self.createNewPiece()
         self.done = False
         return self.state
@@ -66,13 +67,14 @@ class TetrisEngine(object):
     def createNewPiece(self):
         minX, maxX, minY, maxY = self.state.nextShape.getBoundingOffsets(0)
         result = False
-        if self.tryMoveCurrent(0, 5, -minY):
-            self.state.x = 5
+        if self.tryMoveCurrent(0, int(self.width/2), -minY):
+            self.state.x = self.width/2
             self.state.y = -minY
             self.state.direction = 0
             self.state.currentShape = self.state.nextShape
             # self.state.nextShape = Shape(random.randint(1, 7))
             self.state.nextShape = Shape(5)   #FOR TRIVIAL STATE!!
+            # self.state.nextShape = Shape(np.random.choice([1,5]))   #for o + i piece
             result = True
         else:
             self.state.currentShape = Shape()
@@ -114,7 +116,6 @@ class TetrisEngine(object):
 
     def moveRotateDrop(self,direction,x):
         can_move = False
-
         while self.tryMoveCurrent(direction, x, self.state.y + 1):
             self.state.y += 1
             can_move = True
@@ -123,10 +124,19 @@ class TetrisEngine(object):
             return
 
         # perform merge
+        min_y = 22
+        i=0
         for xx, yy in self.state.currentShape.getCoords(direction, x, self.state.y):
+            if yy < min_y:
+                min_y = yy
             self.state.board[yy,xx] = self.state.currentShape.kind
+            self.state.last_piece_drop_coords[i] = (xx,yy) # tracks position of dropped piece
+            i+=1
+
+        self.state.height_of_last_piece = min_y
 
         lines = self.removeFullLines()
+        self.state.num_last_lines_cleared = lines
         self.createNewPiece()
         return lines
 
@@ -155,12 +165,12 @@ class TetrisEngine(object):
         num_left = np.sum(rmask)
         num_full = self.height - num_left
 
-        self.num_last_piece_cleared = 0
+        self.state.num_last_piece_cleared = 0
 
-        for coord in self.last_piece_drop_coords:
+        for coord in self.state.last_piece_drop_coords:
             if not rmask[coord[1]]:
-                self.num_last_piece_cleared += 1
-        # print("REMOVED: " + str(self.num_last_piece_cleared))
+                self.state.num_last_piece_cleared += 1
+        # print("REMOVED: " + str(self.state.num_last_piece_cleared))
 
         if num_full > 0:
             new_board = np.zeros_like(self.state.board)
@@ -171,14 +181,17 @@ class TetrisEngine(object):
 
     def mergePiece(self):
         min_y = 22
-        self.last_piece_drop_coords = []
+        # self.last_piece_drop_coords = []
+        i=0
         for x, y in self.state.currentShape.getCoords(self.state.direction, self.state.x, self.state.y):
             if y < min_y:
                 min_y = y
             self.state.board[y,x] = self.state.currentShape.kind
-            self.last_piece_drop_coords.append((x,y)) # tracks position of dropped piece
+            self.state.last_piece_drop_coords[i] = (x,y) # tracks position of dropped piece
+            i += 1
 
-        self.height_of_last_piece = min_y
+
+        self.state.height_of_last_piece = min_y
         self.state.x = -1
         self.state.y = -1
         self.state.direction = 0
@@ -191,8 +204,8 @@ class TetrisEngine(object):
         self.features = []
 
         # DU FEATURES
-        self.features.append(self.height -self.height_of_last_piece)     # landingHeight
-        self.features.append(self.num_last_lines_cleared*self.num_last_piece_cleared)    # eroded cells
+        self.features.append(self.height -self.state.height_of_last_piece)     # landingHeight
+        self.features.append(self.state.num_last_lines_cleared*self.state.num_last_piece_cleared)    # eroded cells
         self.features.append(self.countRowTransitions())
         self.features.append(self.countColTransitions())
         self.features.append(self.countNumHoles()) # each empty, covered cell is a distinct hole
@@ -200,19 +213,20 @@ class TetrisEngine(object):
         self.features.append(self.getHoleDepths())
         self.features.append(self.countRowsWithHoles())  # rows with holes
 
-        # # BERTSEKAS FEATURES (+num holes from above)
-        # # height of each column
-        # temp_heights = self.getColHeights() # 10
-        # for i in range(len(temp_heights)):
-        #     self.features.append(temp_heights[i])
-        #
-        # # height difference between columns
-        # temp_differences = self.getHeightDifferences() # 9
-        # for i in range(len(temp_differences)):
-        #     self.features.append(temp_differences[i])
-        #
-        # self.features.append(self.getMaxHeight())
-        # self.features.append(1) # constant feature ???
+        # BERTSEKAS FEATURES (+num holes from above)
+        # height of each column
+        temp_heights = self.getColHeights() # 10
+        for i in range(len(temp_heights)):
+            self.features.append(temp_heights[i])
+
+        # height difference between columns
+        temp_differences = self.getHeightDifferences() # 9
+        for i in range(len(temp_differences)):
+            self.features.append(temp_differences[i])
+
+        self.features.append(self.getMaxHeight())
+        self.features.append(1)  # constant feature
+
         #
         #
         # # pattern diversity feature ???
@@ -226,12 +240,12 @@ class TetrisEngine(object):
         #     denom = 2 * ((h / 5)**2)
         #     rbf_height = math.exp(-1*((c - (i*h)/4)**2)/(2*(h/5)**2))
         #     self.features.append(numer / denom)
-        #
+
         # PIECE FEATURES (7)
-        # pieces = [0]*7
-        # pieces[self.state.currentShape.kind] = 1
+        pieces = [0]*7
+        pieces[self.state.currentShape.kind-1] = 1
         # EASYL TETRIS PIECE (i.e. just square piece)
-        pieces = [1]
+        # pieces = [1]
         self.features += pieces
 
         return self.features
