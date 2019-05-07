@@ -120,9 +120,11 @@ class TetrisEnvironment(gym.Env):
         num_actions = self._engine.width * 4
         A = np.empty(shape=num_actions)  # r = rotation, c = column, minY= offset from top of board
         for r in range(4):
+            # minX, maxX, minY, maxY = board.nextShape.getBoundingOffsets(0)
+            minX, maxX, minY, maxY = self._engine.state.currentShape.getBoundingOffsets(r)
+
             for c in range(self._engine.width):
-                # minX, maxX, minY, maxY = board.nextShape.getBoundingOffsets(0)
-                minX, maxX, minY, maxY = self._engine.state.currentShape.getBoundingOffsets(r)
+
                 if(self._engine.tryMoveCurrent(r, c, -minY)):
                     A[r*self._engine.width +c] = 1 # can make move
                 else:

@@ -8,17 +8,19 @@ from gym_tetris import TetrisEnvironment
 from gym_tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
 logger = logging.getLogger(__name__)
 
-
-
-def sample_random_states(env,policy,N):
-    """Does rollout using policy to get N random states"""
+def sample_random_states(env,policy, rnd_plc,N):
+    """Does rollout using policy to get N random states
+     FOR EASY GAME...JUST DO RANDOM POLICY TO MAKE INITIAL STATE SINCE DU CONTROLLER TO GOOD (i.e. just o piece)
+     """
 
     # Step 0 - Allocate return arrays
     states = np.empty(shape = N, dtype=TetrisState)
-    x = random.randint(10,20)    # number of moves to make when creating init state
+    # x = random.randint(10,20)    # number of moves to make when creating init state
+    x = 5
 
     # Step 2 - run the environment and collect final states
     for i in range(N):
+        # print("NEW STATE")
         env.reset() # reset environment
 
         # make x number of moves following DU policy
@@ -26,8 +28,18 @@ def sample_random_states(env,policy,N):
             if env._terminal:
                 break
             action = policy.action(env.state)
-            # print("ACTION: " + str(action))
+            # print("ACTION: " + str(action) +" PIECE: "+ str(env.state.currentShape.kind))
             env.step(action)    # get state of env
+
+        # ADD TWO RANDOM STEPS AT END FOR TRIVIAL VERSION
+        for j in range(1):
+            if env._terminal:
+                break
+            action = rnd_plc.action(env.state)
+            # print("ACTION: " + str(action) +" PIECE: "+ str(env.state.currentShape.kind))
+            env.step(action)    # get state of env
+
+
 
         # print(env.state.board)
         states[i] = env.state
@@ -135,15 +147,3 @@ def copy_state(s):
                         s.width,s.height_of_last_piece,s.num_last_lines_cleared,
                         s.num_last_piece_cleared,s.last_piece_drop_coords)
     return new_s
-
-    # np.copyto(copy.board, board.board)
-    # copy.x = board.x
-    # copy.y = board.y
-    # copy.direction = board.direction
-    # copy.currentShape = board.currentShape
-    # copy.nextShape = board.nextShape
-    # copy.width = board.width
-    # copy.height = board.height
-
-    # np.copyto(copy.shapeStat, board.shapeStat)
-    # copy.done = board.done

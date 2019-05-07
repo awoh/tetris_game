@@ -25,14 +25,18 @@ def eval_policy(env, plc):
     lines_cleared = 0
     while not env._terminal:
         action = plc.action(env.state())
-        print(action)
+        # print("action: "+str(action))
         # GETS STUCK HERE SOMETIMES IN AN INFINITE LOOP...NOT SURE WHY!!
         _, reward, _, _ = env.step(action)
-        print("reward: "+str(reward))
         if not env._terminal:
             lines_cleared += reward
+
+        # print("reward: "+str(lines_cleared))
+        # print(env._terminal)
+
+
     # print("eval state")
-        print(env._env.state.board)
+        # print(env._env.state.board)
     return lines_cleared
 
 if __name__ == '__main__':
@@ -77,7 +81,8 @@ if __name__ == '__main__':
     width = 6
     num_actions = width * 4    # there are 40 potential actions (if width = 10)
     num_eval = 20
-    num_features = 8+(2*width+1) +7 # DU + bertsekas + 7 blocks (even though only using 2 rn)
+    # num_features = 8+(2*width+1) +7 # DU + bertsekas + 7 blocks (even though only using 2 rn)
+    num_features = 8 + 7 # bertsekas + pieces
     init_plc = models.DUPolicy(env,num_features, num_actions)
     critic,plc = models.LinearVFA(num_features),models.LinearPolicy(env,num_features, num_actions)
 
@@ -101,8 +106,11 @@ if __name__ == '__main__':
         w_env.reset()
 
         # get set D_k (get start states), use DU Policy
-        init_states = smp.sample_random_states(env, init_plc, train_config['N'])
+        rnd_plc = models.RandomPolicy(env,num_features,num_actions)
+        init_states = smp.sample_random_states(env, init_plc, rnd_plc, train_config['N'])
+        # init_states = smp.sample_random_states(env, models.RandomPolicy(env,num_features,num_actions), train_config['N'])
 
+        # quit()
         init_features = [0]*len(init_states)
         # get features for every state
         for i in range(len(init_states)):
@@ -111,8 +119,10 @@ if __name__ == '__main__':
 
         v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
         q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
-
+        # print(v_batch)
         algo.update_critic(init_features,v_batch)    # update critic first
+        print("CRITIC WEIGHTS: ")
+        print(critic.weights)
         algo.update_policy(init_features, q_batch)
 
         # run evaluation code, save results, log results

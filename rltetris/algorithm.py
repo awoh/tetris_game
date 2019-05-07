@@ -45,6 +45,7 @@ class CBMPI(object):
             loss += q_diff
 
         loss = loss/N
+        # print(loss)
         return loss
 
     def update_policy(self,init_states, q_batch):
@@ -69,14 +70,18 @@ class CBMPI(object):
         batch = [ [[0]*(len_state), [0]*(state_q_len)] ] *len(q_batch)   #each inner array is: [S_i, [Q...]]
         for i in range(len(q_batch)):
             batch[i][0] =  init_states[i]
-            batch[i][1] =  q_batch[i][:,1]   #all q values for that state
+            batch[i][1] =  q_batch[i][:,1]   # all q values for that state
 
         # This is where you need to call CMA-ES,  you need to give it an objective function to evaluate
         # you can pass extra args to be forwarded to _policy_loss_cbmpi (see docs)
         policy_loss = lambda x : self._policy_loss_cbmpi(x,batch,self._policy)        # x is the weights of the policy, may need to bind policy too
-        inital_params = self._policy.get_params()
-        sigma0 = 1
-        new_params, es = cma.fmin2(policy_loss,self._policy.get_params(),sigma0)   # need weights of features for every action (so new_params = feat*action)
+        initial_params = self._policy.get_params()
+
+        sigma0, pop_size = 0.5, len_state *15     # parameters set by paper number of features * 15
+        # new_params, es = cma.fmin2(policy_loss,self._policy.get_params(),sigma0, options={'popsize': pop_size})   # need weights of features for every action (so new_params = feat*action)
+
+        opts={'popsize': pop_size}
+        new_params = cma.CMAEvolutionStrategy(self._policy.get_params(), sigma0,opts).optimize(policy_loss).result[0]
         # PAPER ALSO HAS PARAMS FOR OTHER PARAMS FOR FMIN: p, eta (greek h), n....not sure how these go into cma.fmin2()
 
         # NEW PARAMS IS OF LENGTH FEATURES * NUM_ACTIONS

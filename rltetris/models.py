@@ -92,7 +92,6 @@ class DUPolicy(BasePolicy):
         # do argmax on ones that are allowed.
         # multiply state * every array in weights and take max of those
         A = self._env.get_action_set()
-
         scores = np.empty(shape = len(A))
         for i in range(len(A)):
             if A[i] == 0:
@@ -103,7 +102,6 @@ class DUPolicy(BasePolicy):
                                     state.height_of_last_piece,state.num_last_lines_cleared,
                                     state.num_last_piece_cleared,state.last_piece_drop_coords)
                 self._env.set_state(new_s)  #set the copied board as the state
-
                 self._env.step(i)
                 scores[i] = np.dot(self.weights, self._env.get_features())
         self._env.set_state(state)  #reset back to original state
@@ -167,7 +165,19 @@ class LinearVFA(BaseValue):
 # Implement Random Policy for discrete control spaces
 # could use this instead of DUPolicy for non-tetris games
 class RandomPolicy(BasePolicy):
-    pass
+    def __init__(self,env, num_features, num_actions):
+        self.weights = [0]*(num_features)  # weights are a matrix of featuers * num_actions, but flattened to 1D
+        self._env = env        # policy, want possible actions, so pass in environment
+
+    def action(self,state):
+        """Choose random action from list of potential actions"""
+
+
+        # want only actions that are valid, so make all others awful
+        valid_actions = self._env.get_action_set()
+        possible_actions = np.argwhere(valid_actions ==1).flatten()  #get indices of all valid actions
+        action = np.random.choice(possible_actions)    # need to get random one in best_actions
+        return action
 
 # You could also just find some Blackjack policy (trained model) online
 # to generate the initial states

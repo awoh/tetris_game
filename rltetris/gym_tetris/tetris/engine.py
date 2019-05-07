@@ -67,8 +67,8 @@ class TetrisEngine(object):
     def createNewPiece(self):
         minX, maxX, minY, maxY = self.state.nextShape.getBoundingOffsets(0)
         result = False
-        if self.tryMoveCurrent(0, int(self.width/2), -minY):
-            self.state.x = self.width/2
+        if self.tryMoveCurrent(0, int((self.width-1)/2), -minY):
+            self.state.x = int((self.width-1)/2)
             self.state.y = -minY
             self.state.direction = 0
             self.state.currentShape = self.state.nextShape
@@ -116,7 +116,9 @@ class TetrisEngine(object):
 
     def moveRotateDrop(self,direction,x):
         can_move = False
+
         while self.tryMoveCurrent(direction, x, self.state.y + 1):
+
             self.state.y += 1
             can_move = True
         if not can_move:
@@ -130,14 +132,19 @@ class TetrisEngine(object):
             if yy < min_y:
                 min_y = yy
             self.state.board[yy,xx] = self.state.currentShape.kind
-            self.state.last_piece_drop_coords[i] = (xx,yy) # tracks position of dropped piece
+            self.state.last_piece_drop_coords[i] = (xx,yy) # tracks position of last dropped piece
             i+=1
 
         self.state.height_of_last_piece = min_y
+        self.state.x= -1
+        self.state.y = -1
+        self.state.direction = 0
+        self.state.currentShape = Shape()
 
         lines = self.removeFullLines()
         self.state.num_last_lines_cleared = lines
-        self.createNewPiece()
+        created_piece = self.createNewPiece()
+
         return lines
 
     def moveLeft(self):
@@ -213,19 +220,19 @@ class TetrisEngine(object):
         self.features.append(self.getHoleDepths())
         self.features.append(self.countRowsWithHoles())  # rows with holes
 
-        # BERTSEKAS FEATURES (+num holes from above)
-        # height of each column
-        temp_heights = self.getColHeights() # 10
-        for i in range(len(temp_heights)):
-            self.features.append(temp_heights[i])
-
-        # height difference between columns
-        temp_differences = self.getHeightDifferences() # 9
-        for i in range(len(temp_differences)):
-            self.features.append(temp_differences[i])
-
-        self.features.append(self.getMaxHeight())
-        self.features.append(1)  # constant feature
+        # # BERTSEKAS FEATURES (+num holes from above)
+        # # height of each column
+        # temp_heights = self.getColHeights() # 10
+        # for i in range(len(temp_heights)):
+        #     self.features.append(temp_heights[i])
+        #
+        # # height difference between columns
+        # temp_differences = self.getHeightDifferences() # 9
+        # for i in range(len(temp_differences)):
+        #     self.features.append(temp_differences[i])
+        #
+        # self.features.append(self.getMaxHeight())
+        # self.features.append(1)  # constant feature
 
         #
         #
@@ -244,8 +251,6 @@ class TetrisEngine(object):
         # PIECE FEATURES (7)
         pieces = [0]*7
         pieces[self.state.currentShape.kind-1] = 1
-        # EASYL TETRIS PIECE (i.e. just square piece)
-        # pieces = [1]
         self.features += pieces
 
         return self.features
