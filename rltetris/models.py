@@ -28,6 +28,9 @@ class BasePolicy(object):
         # want a vector of actions that are/aren't allowed and then only
         # do argmax on ones that are allowed.
         # multiply state * every array in weights and take max of those
+        # print("ENV S: ")
+        # print(self._env.state.board)
+
         A = self._env.get_action_set()
         scores = np.empty(shape = len(A))
         init_state = self._env.state
@@ -43,7 +46,6 @@ class BasePolicy(object):
                 self._env.set_state(new_s)  #set the copied board as the state
                 self._env.step(i)
                 scores[i] = np.dot(self.weights, self._env.get_features())
-
         self._env.reset()
         self._env.set_state(init_state)  #reset back to original state
         best_actions = np.argwhere(scores == np.amax(scores)).flatten()

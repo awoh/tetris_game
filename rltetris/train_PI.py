@@ -110,22 +110,23 @@ if __name__ == '__main__':
         rnd_plc = models.RandomPolicy(env,num_features,num_actions)
         init_states = smp.sample_random_states(env, init_plc, rnd_plc, train_config['N'])
         # init_states = smp.sample_random_states(env, models.RandomPolicy(env,num_features,num_actions), train_config['N'])
-
         # quit()
         init_features = [0]*len(init_states)
         # get features for every state
         for i in range(len(init_states)):
             env.set_state(init_states[i])
+            # print(init_states[i].board)
             init_features[i] = env.get_features()
-
+        # print(init_features)
         v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
         q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
+
         print(v_batch)
         print(q_batch)
         algo.update_critic(init_features,v_batch)    # update critic first
         print("CRITIC WEIGHTS: ")
         print(critic.weights)
-        algo.update_policy(init_features, q_batch)
+        algo.update_policy(init_states, q_batch)
         print("POLICY WEIGHTS: ")
         print(plc.weights)
 

@@ -89,10 +89,11 @@ def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
     q_batch = [ [ [[0]*num_features, 0] ]*num_actions ]*len(D_k)
     # q_hats = np.empty(shape = [len(D_k), num_actions])
     # s_ms = np.empty(shape = [len(D_k), num_actions, num_features])
-
     # go thru every state in D_k
     for i in range(len(D_k)):
         curr_state = D_k[i]
+        # print("CURR STATE")
+        # print(curr_state.board)
         env.set_state(curr_state)
 
         A = env.get_action_set()
@@ -108,10 +109,14 @@ def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
             # build M rollouts  (get rewards for all future states (1 -> m+1))
             # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
             else:
+                # print("ROLLOUT: ")
                 S_m, reward = rollout_from_state(env, curr_state, plc, m+1, gamma, j)   # get rollout for state
+                # print("S m: ")
+                # print(S_m)
                 q_batch[i][j] = [S_m, reward]
 
     q_batch = np.array(q_batch)
+    # print(q_batch)
     return q_batch
 
 
@@ -131,17 +136,20 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
     S_i = copy_state(start)
     env.set_state(S_i)
     env_state = env.state()
+    # print(S_i.board)
 
     tot_reward = 0
     curr_reward = 0 # PROBABLY SHOULD CHANGE???????????
 
     # Step 2 - Use for loop to run,  need to go from 0 to m-1, m is an upper bound (since game may end earlier)
     for i in range(m-1):
+        # print(i)
 
         # print(env._env._engine.state.board)
         # Use start_action to optionally pass the start action. If it is None, policy should be used
         if start_action != None:
             next_move = start_action
+            start_action = None
         else:
             # use policy
             # use wrapper environemnt, so S_i is really set of reatures
