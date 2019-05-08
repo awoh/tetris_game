@@ -69,21 +69,20 @@ class CBMPI(object):
         for i in range(len(q_batch)):
             state_q_len = len(q_batch[i])
             for j in range(state_q_len):
-                
+                # print(q_batch[i][j][0])
                 estimated_q_val = self._critic.eval(q_batch[i][j][0]) + q_batch[i][j][1]
                 q_batch[i][j][1] = estimated_q_val
         # len_state = len(init_states[0])
-        print("INIT")
-        print(init_states)
-        print("Q: ")
-        print(q_batch)
+        # print("INIT")
+        # print(init_states)
+        # print("Q: ")
+        # print(q_batch)
         batch = [ [[None], [0]*(state_q_len)] ] *len(q_batch)   #each inner array is: [S_i, [Q...]]
         for i in range(len(q_batch)):
             batch[i][0] =  init_states[i]
             batch[i][1] =  q_batch[i][:,1]   # all q values for that state
         print("BATCH: ")
         print(batch)
-        quit()
 
         # This is where you need to call CMA-ES,  you need to give it an objective function to evaluate
         # you can pass extra args to be forwarded to _policy_loss_cbmpi (see docs)

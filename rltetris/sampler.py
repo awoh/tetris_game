@@ -86,9 +86,8 @@ def get_vh(env, D_k, plc,m,gamma, num_features):
     return v_batch
 
 def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
-    q_batch = [ [ [[0]*num_features, 0] ]*num_actions ]*len(D_k)
-    # q_hats = np.empty(shape = [len(D_k), num_actions])
-    # s_ms = np.empty(shape = [len(D_k), num_actions, num_features])
+    q_batch = []
+
     # go thru every state in D_k
     for i in range(len(D_k)):
         curr_state = D_k[i]
@@ -97,26 +96,28 @@ def get_qh(env, D_k, plc,m,gamma, num_features, num_actions):
         env.set_state(curr_state)
 
         A = env.get_action_set()
-
+        inner_arr = []
         # for every possible action from state s, make action and then follow policy for m steps
         for j in range(len(A)):
             tot_Q = 0
 
             # if action not possible...
             if A[j] == 0:
-                q_batch[i][j] = [env._env.get_features(), -1000]  #make it really bad
+                inner_arr += [ [env._env.get_features(), -1000] ]
 
             # build M rollouts  (get rewards for all future states (1 -> m+1))
             # build rollout set (size m+1) from this state (going further in future), i.e. [(s, a, r)...]
             else:
                 # print("ROLLOUT: ")
                 S_m, reward = rollout_from_state(env, curr_state, plc, m+1, gamma, j)   # get rollout for state
-                # print("S m: ")
-                # print(S_m)
-                q_batch[i][j] = [S_m, reward]
+
+
+                # q_batch[i][j] = [S_m, reward]
+                inner_arr += [ [S_m, reward] ]
+
+        q_batch += [inner_arr]
 
     q_batch = np.array(q_batch)
-    # print(q_batch)
     return q_batch
 
 

@@ -118,10 +118,11 @@ if __name__ == '__main__':
             # print(init_states[i].board)
             init_features[i] = env.get_features()
         # print(init_features)
-        v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
+        # v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
+        # print(v_batch)
+
         q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
 
-        print(v_batch)
         print(q_batch)
         algo.update_critic(init_features,v_batch)    # update critic first
         print("CRITIC WEIGHTS: ")
