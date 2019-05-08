@@ -31,12 +31,11 @@ class CBMPI(object):
         N = len(batch)
         policy.set_params(omega0) #replace policy with input policy for loss
         loss =0
-        print("BATCH")
-        print(batch)
+
         for i in range(N):
             state = batch[i][0]
-            print("STATE: ")
-            print(state)
+            # print("STATE: ")
+            # print(state)
             q_hats = np.array(batch[i][1])  #list of all q_hats for given state
 
             max_q = np.amax(q_hats) # get max Q(s_i, a)
@@ -51,7 +50,7 @@ class CBMPI(object):
             loss += q_diff
 
         loss = loss/N
-        print("LOSS: " + str(loss))
+        # print("LOSS: " + str(loss))
         return loss
 
     def update_policy(self,init_states, q_batch):
@@ -78,18 +77,19 @@ class CBMPI(object):
         # print("Q: ")
         # print(q_batch)
         batch = [ [[None], [0]*(state_q_len)] ] *len(q_batch)   #each inner array is: [S_i, [Q...]]
+        batch= []
         for i in range(len(q_batch)):
-            batch[i][0] =  init_states[i]
-            batch[i][1] =  q_batch[i][:,1]   # all q values for that state
-        print("BATCH: ")
-        print(batch)
+            inner_batch = [init_states[i], q_batch[i][:,1]]
+            batch += [inner_batch]
+        # print("BATCH: ")
+        # print(batch)
 
         # This is where you need to call CMA-ES,  you need to give it an objective function to evaluate
         # you can pass extra args to be forwarded to _policy_loss_cbmpi (see docs)
         policy_loss = lambda x : self._policy_loss_cbmpi(x,batch,self._policy)        # x is the weights of the policy, may need to bind policy too
         initial_params = self._policy.get_params()
 
-        sigma0, pop_size = 0.5, len_state *15     # parameters set by paper number of features * 15
+        sigma0, pop_size = 0.5, state_q_len *15     # parameters set by paper number of features * 15
         opts={'popsize': pop_size}
 
         # new_params, es = cma.fmin2(policy_loss,self._policy.get_params(),sigma0, options={'popsize': pop_size})   # need weights of features for every action (so new_params = feat*action)

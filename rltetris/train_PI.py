@@ -79,7 +79,8 @@ if __name__ == '__main__':
     logger.info(log_str)
     # width = 10
     width = 6
-    num_actions = width * 4    # there are 40 potential actions (if width = 10)
+    # num_actions = width * 4    # there are 40 potential actions (if width = 10)
+    num_actions = 6 # for the O piece
     num_eval = 20
     # num_features = 8+(2*width+1) +7 # DU + bertsekas + 7 blocks (even though only using 2 rn)
     # num_features = 8 + 7 # bertsekas + pieces
@@ -118,12 +119,12 @@ if __name__ == '__main__':
             # print(init_states[i].board)
             init_features[i] = env.get_features()
         # print(init_features)
-        # v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
-        # print(v_batch)
+        v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
+        print(v_batch)
 
         q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
 
-        print(q_batch)
+        # print(q_batch)
         algo.update_critic(init_features,v_batch)    # update critic first
         print("CRITIC WEIGHTS: ")
         print(critic.weights)

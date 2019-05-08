@@ -105,7 +105,7 @@ class TetrisEnvironment(gym.Env):
     @property
     def time(self):
         return self._time
-        
+
 
     def _render(self, mode='human', close=False):
         return
@@ -133,6 +133,11 @@ class TetrisEnvironment(gym.Env):
                     A[r*self._engine.width +c] = 1 # can make move
                 else:
                     A[r*self._engine.width+c] = 0 # action not possible
+
+        # if O piece (shape 5), only have action set be of size 6 since that's all that's needed
+        if self._engine.state.currentShape.kind == 5:
+            A = A[:6]
+
         return A
 
 register_envs()
