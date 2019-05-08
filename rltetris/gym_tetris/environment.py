@@ -80,6 +80,9 @@ class TetrisEnvironment(gym.Env):
     def get_features(self):
         return self._engine.getFeatures()
 
+    def get_du_features(self):
+        return self._engine.get_du_features()
+
     def reset(self):
         """
         Reset the state of the environment and returns an initial observation.
@@ -102,6 +105,7 @@ class TetrisEnvironment(gym.Env):
     @property
     def time(self):
         return self._time
+        
 
     def _render(self, mode='human', close=False):
         return

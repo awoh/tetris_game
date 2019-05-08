@@ -31,21 +31,27 @@ class CBMPI(object):
         N = len(batch)
         policy.set_params(omega0) #replace policy with input policy for loss
         loss =0
+        print("BATCH")
+        print(batch)
         for i in range(N):
             state = batch[i][0]
+            print("STATE: ")
+            print(state)
             q_hats = np.array(batch[i][1])  #list of all q_hats for given state
 
             max_q = np.amax(q_hats) # get max Q(s_i, a)
 
             # will give integer corresponding to action --> tells you index of q_hat from array q_hats
+            # print(batch[i][0])
             policy_action = policy.action(state)
+            # print(policy_action)
             policy_q = q_hats[policy_action]
-            q_diff = max_q - policy_q
+            q_diff = max_q - policy_q\
 
             loss += q_diff
 
         loss = loss/N
-        # print(loss)
+        print("LOSS: " + str(loss))
         return loss
 
     def update_policy(self,init_states, q_batch):
@@ -78,11 +84,10 @@ class CBMPI(object):
         initial_params = self._policy.get_params()
 
         sigma0, pop_size = 0.5, len_state *15     # parameters set by paper number of features * 15
-        # new_params, es = cma.fmin2(policy_loss,self._policy.get_params(),sigma0, options={'popsize': pop_size})   # need weights of features for every action (so new_params = feat*action)
-
         opts={'popsize': pop_size}
+
+        # new_params, es = cma.fmin2(policy_loss,self._policy.get_params(),sigma0, options={'popsize': pop_size})   # need weights of features for every action (so new_params = feat*action)
         new_params = cma.CMAEvolutionStrategy(self._policy.get_params(), sigma0,opts).optimize(policy_loss).result[0]
-        # PAPER ALSO HAS PARAMS FOR OTHER PARAMS FOR FMIN: p, eta (greek h), n....not sure how these go into cma.fmin2()
 
         # NEW PARAMS IS OF LENGTH FEATURES * NUM_ACTIONS
         self._policy.set_params(new_params)

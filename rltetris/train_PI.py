@@ -82,7 +82,8 @@ if __name__ == '__main__':
     num_actions = width * 4    # there are 40 potential actions (if width = 10)
     num_eval = 20
     # num_features = 8+(2*width+1) +7 # DU + bertsekas + 7 blocks (even though only using 2 rn)
-    num_features = 8 + 7 # bertsekas + pieces
+    # num_features = 8 + 7 # bertsekas + pieces
+    num_features = 9 # without pieces, just bertsekas
     init_plc = models.DUPolicy(env,num_features, num_actions)
     critic,plc = models.LinearVFA(num_features),models.LinearPolicy(env,num_features, num_actions)
 
@@ -119,11 +120,15 @@ if __name__ == '__main__':
 
         v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
         q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
-        # print(v_batch)
+        print(v_batch)
+        print(q_batch)
         algo.update_critic(init_features,v_batch)    # update critic first
         print("CRITIC WEIGHTS: ")
         print(critic.weights)
         algo.update_policy(init_features, q_batch)
+        print("POLICY WEIGHTS: ")
+        print(plc.weights)
+
 
         # run evaluation code, save results, log results
          # save entire list to some file (instead of just average, provides additional info)
@@ -132,14 +137,14 @@ if __name__ == '__main__':
         for i in range(num_eval):
             # [(iteration_number,discounted_reward,lines_cleared)]
             result = eval_policy(w_env,plc)
-            # print(w_env._env.state.board)
-            # print("result: "+ str(result))
+            print(w_env._env.state.board)
+            print("result: "+ str(result))
             finished_episodes += 1
             # total_samples = cur_update * samples_per_update
             # stores: total_updates, total_episodes, total_samples, current_episode_length, current_total_reward, current_cumulative_reward
 
             # after update, generate list (for each of evaluations, put entry in list saying (iteration, lines cleared, discounted reward)
-            episode_results[finished_episodes] = np.array([cur_update,finished_episodes,result],ndmin=2)
+            episode_results[finished_episodes-1] = np.array([cur_update,finished_episodes,result],ndmin=2)
             # episode_results = np.concatenate((episode_results,np.array([cur_update,finished_episodes,total_samples,res],ndmin=2)),axis=0)
             # episode_results = np.concatenate((episode_results,np.array([cur_update,finished_episodes,total_samples,el,tr,cr],ndmin=2)),axis=0)
             np.save(episode_results_path, episode_results)

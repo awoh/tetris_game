@@ -204,6 +204,24 @@ class TetrisEngine(object):
         self.state.direction = 0
         self.state.currentShape = Shape()
 
+    def get_du_features(self):
+        """35 features total """
+        # TODO:
+
+        self.features = []
+
+        # DU FEATURES
+        self.features.append(self.height -self.state.height_of_last_piece)     # landingHeight
+        self.features.append(self.state.num_last_lines_cleared*self.state.num_last_piece_cleared)    # eroded cells
+        self.features.append(self.countRowTransitions()) #number of times alternates piece and empty
+        self.features.append(self.countColTransitions())
+        self.features.append(self.countNumHoles()) # each empty, covered cell is a distinct hole
+        self.features.append(self.getNumWells())
+        self.features.append(self.getHoleDepths())
+        self.features.append(self.countRowsWithHoles())  # rows with holes
+
+        return self.features
+
     def getFeatures(self):
         """35 features total """
         # TODO:
@@ -213,12 +231,14 @@ class TetrisEngine(object):
         # DU FEATURES
         self.features.append(self.height -self.state.height_of_last_piece)     # landingHeight
         self.features.append(self.state.num_last_lines_cleared*self.state.num_last_piece_cleared)    # eroded cells
-        self.features.append(self.countRowTransitions())
+        self.features.append(self.countRowTransitions()) #number of times alternates piece and empty
         self.features.append(self.countColTransitions())
         self.features.append(self.countNumHoles()) # each empty, covered cell is a distinct hole
         self.features.append(self.getNumWells())
         self.features.append(self.getHoleDepths())
         self.features.append(self.countRowsWithHoles())  # rows with holes
+
+        self.features.append(self.countPatternDiversity())  # pattern diversity feature ???
 
         # # BERTSEKAS FEATURES (+num holes from above)
         # # height of each column
@@ -236,8 +256,7 @@ class TetrisEngine(object):
 
         #
         #
-        # # pattern diversity feature ???
-        # self.features.append(self.countPatternDiversity())
+
         #
         # # rbf features (5)
         # for i in range(5):
@@ -248,10 +267,10 @@ class TetrisEngine(object):
         #     rbf_height = math.exp(-1*((c - (i*h)/4)**2)/(2*(h/5)**2))
         #     self.features.append(numer / denom)
 
-        # PIECE FEATURES (7)
-        pieces = [0]*7
-        pieces[self.state.currentShape.kind-1] = 1
-        self.features += pieces
+        # # PIECE FEATURES (7)
+        # pieces = [0]*7
+        # pieces[self.state.currentShape.kind-1] = 1
+        # self.features += pieces
 
         return self.features
 
