@@ -16,7 +16,8 @@ class TetrisState(object):
         # self.nextShape = nextShape
         self.nextShape = Shape(5)    #FOR TRIVIAL TETRIS GAME!!
 
-        self.width = width
+        self.width = 6
+        # self.width = width
         self.height = 22
 
         self.height_of_last_piece = 22     # ATTRIBUTES FOR FEATURES!!

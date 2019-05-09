@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 from sklearn.linear_model import LinearRegression
-from gym_tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
+from tetris import TetrisEngine, TetrisState, Shape, ShapeKind
 
 import logging
 logger = logging.getLogger(__name__)

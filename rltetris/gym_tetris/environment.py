@@ -10,16 +10,21 @@ from collections import namedtuple
 logger = logging.getLogger(__name__)
 
 # Local imports
+# from .tetris import TetrisEngine
 
-from .tetris import TetrisEngine
-
+# def register_envs():
+#     register(
+#         id='Tetris-v0',
+#         entry_point='gym_tetris.environment:TetrisEnvironment',
+#         kwargs={"width": 6, "height": 22, "num_shapes": 8}
+#     )
+from tetris import TetrisEngine
 def register_envs():
     register(
         id='Tetris-v0',
-        entry_point='gym_tetris.environment:TetrisEnvironment',
+        entry_point='environment:TetrisEnvironment',
         kwargs={"width": 6, "height": 22, "num_shapes": 8}
     )
-
 
 class TetrisEnvironment(gym.Env):
     """
@@ -69,7 +74,7 @@ class TetrisEnvironment(gym.Env):
                  use this for learning.
         """
         if self._terminal:
-            raise RuntimeError('Game is already over')
+            return -1,-1,-1,{}
         # update state
         a = self._engine.action_map[action]
         r_tp1 = self._engine.moveRotateDrop(a[0],a[1])

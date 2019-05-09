@@ -21,8 +21,9 @@ class TetrisGame(QMainWindow):
         self._engine = TetrisEngine()
         self._agent = None
         if AIType is not None:
-            self._agent = AIType(self._engine.width,self._engine.height)
-
+            # self._agent = AIType(self._engine.width,self._engine.height)
+            # self._agent = AIType(self._engin)
+            self._agent = AIType
         self.initUI()
 
     def initUI(self):
@@ -88,7 +89,10 @@ class TetrisGame(QMainWindow):
     def timerEvent(self, event):
         if event.timerId() == self.timer.timerId():
             if self._agent and not self.nextMove:
-                self.nextMove = self._agent.action(self._state)
+                # feats = self._engine.getFeatures()
+                # print(self._agent._env.state)
+                self.nextMove = self._agent.action(self._agent._env.state)
+                self.nextMove = self._agent._env._engine.action_map[self.nextMove]
             if self.nextMove:
                 k = 0
                 while self._state.direction != self.nextMove[0] and k < 4:

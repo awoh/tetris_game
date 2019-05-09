@@ -11,7 +11,7 @@ def train_argparser():
     parser.add_argument("-o", "--odir", type=str, default=None, help="output directory")
     parser.add_argument("-d", "--debug", action="store_true", help="debug")
     parser.add_argument("-g","--gamma", type=float, default=0.99, help="discount factor")
-    parser.add_argument("-s",'--save_interval', type=float, default=1e3, help="Model Save Interval")
+    parser.add_argument("-s",'--save_interval', type=float, default=2, help="Model Save Interval")
     parser.add_argument("-l",'--log_interval', type=int, default=50, help="Log Interval")
     parser.add_argument("-E",'--env', type=str, default="Blackjack-v0", help="Environment to use")      # to run Tetris: "Tetris-v0"
     parser.add_argument("-co", "--console", action="store_true", help="log to console")

@@ -19,8 +19,8 @@ def sample_random_states(env,policy, rnd_plc,N):
 
     # Step 2 - run the environment and collect final states
     i=0
-    while i < N-4:
-        x = random.randint(10,20)    # number of moves to make when creating init state
+    while i < N-5:
+        x = random.randint(5,7)    # number of moves to make when creating init state
         # print("X: "+str(x))
         env.reset() # reset environment
 
@@ -46,6 +46,8 @@ def sample_random_states(env,policy, rnd_plc,N):
             states[i] = env.state
             i+=1
 
+    env.reset() # reset environment
+    states[N-5] = env.state
 
     env.reset() # reset environment
     for i in range(2):
@@ -69,7 +71,6 @@ def sample_random_states(env,policy, rnd_plc,N):
         env.step(3)
     states[N-1] = env.state
 
-
     return states
 
 
@@ -80,6 +81,8 @@ def get_vh(env, D_k, plc,m,gamma, num_features):
     # S_ms = [[0]*num_features]*len(D_k)
     # go thru every state in D_k
     for i in range(len(D_k)):
+        # print("ROLLOUT: ")
+        # print(D_k[i].board)
         S_m, reward = rollout_from_state(env, D_k[i], plc, m, gamma)   # get rollout for state
         v_batch[i] = [S_m, reward]
     v_batch = np.array(v_batch)
@@ -137,6 +140,7 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
     S_i = copy_state(start)
     env.set_state(S_i)
     env_state = env.state()
+    # print("INIT ROLLOUT STATE")
     # print(S_i.board)
 
     tot_reward = 0
@@ -155,9 +159,11 @@ def rollout_from_state(env,start,plc,m,gamma,start_action=None):
             # use policy
             # use wrapper environemnt, so S_i is really set of reatures
             next_move = plc.action(env_state)
-            # print("NEXT MOVE: " + str(next_move))
+        # print("NEXT MOVE: " + str(next_move))
 
         env_state, curr_reward, _, _ = env.step(next_move)
+        # print(env._env.state.board)
+        # print(env_state)
 
         # if reached end of game before doing m steps
         if env._terminal:

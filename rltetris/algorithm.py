@@ -45,7 +45,7 @@ class CBMPI(object):
             policy_action = policy.action(state)
             # print(policy_action)
             policy_q = q_hats[policy_action]
-            q_diff = max_q - policy_q\
+            q_diff = max_q - policy_q
 
             loss += q_diff
 
@@ -89,11 +89,12 @@ class CBMPI(object):
         policy_loss = lambda x : self._policy_loss_cbmpi(x,batch,self._policy)        # x is the weights of the policy, may need to bind policy too
         initial_params = self._policy.get_params()
 
-        sigma0, pop_size = 0.5, state_q_len *15     # parameters set by paper number of features * 15
+        sigma0, pop_size = 0.5, 9 *15     # parameters set by paper number of features * 15
         opts={'popsize': pop_size}
-
+        sigma0 = 1
         # new_params, es = cma.fmin2(policy_loss,self._policy.get_params(),sigma0, options={'popsize': pop_size})   # need weights of features for every action (so new_params = feat*action)
-        new_params = cma.CMAEvolutionStrategy(self._policy.get_params(), sigma0,opts).optimize(policy_loss).result[0]
+        # new_params = cma.CMAEvolutionStrategy(self._policy.get_params(), sigma0,opts).optimize(policy_loss).result[0]
+        new_params = cma.CMAEvolutionStrategy(self._policy.get_params(), sigma0).optimize(policy_loss).result[0]
 
         # NEW PARAMS IS OF LENGTH FEATURES * NUM_ACTIONS
         self._policy.set_params(new_params)

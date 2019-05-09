@@ -4,6 +4,13 @@ import argparse
 from PyQt5.QtWidgets import QApplication
 from tetris import TetrisGame
 from tetris_ai import TetrisRBAI
+sys.path.append("/foo")
+import models
+import environments
+import environment
+import gym
+
+model = "../out/experiment_2019.05.08_18.11.27/model_update_%06d.npy"
 
 
 if __name__ == '__main__':
@@ -18,6 +25,11 @@ if __name__ == '__main__':
         random.seed(args.seed)
 
     app = QApplication([])
-    ai = TetrisRBAI if args.ai else None
+    env = gym.make("Tetris-v0")
+
+    # w_env = environments.FeatureWrapper(env)
+    ai = models.LinearPolicy(env, 9,6)
+    ai.load_model(model)
+    # ai = TetrisRBAI if args.ai else None
     tetris = TetrisGame(speed=args.speed,AIType=ai)
     sys.exit(app.exec_())

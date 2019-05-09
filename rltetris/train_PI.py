@@ -28,15 +28,19 @@ def eval_policy(env, plc):
         # print("action: "+str(action))
         # GETS STUCK HERE SOMETIMES IN AN INFINITE LOOP...NOT SURE WHY!!
         _, reward, _, _ = env.step(action)
+        if reward == -1:
+            return lines_cleared
         if not env._terminal:
             lines_cleared += reward
 
-        # print("reward: "+str(lines_cleared))
+        print("reward: "+str(lines_cleared))
         # print(env._terminal)
+        if lines_cleared > 50:
+            return lines_cleared
 
 
     # print("eval state")
-        # print(env._env.state.board)
+        print(env._env.state.board)
     return lines_cleared
 
 if __name__ == '__main__':
@@ -131,7 +135,6 @@ if __name__ == '__main__':
         algo.update_policy(init_states, q_batch)
         print("POLICY WEIGHTS: ")
         print(plc.weights)
-
 
         # run evaluation code, save results, log results
          # save entire list to some file (instead of just average, provides additional info)
