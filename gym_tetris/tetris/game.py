@@ -19,11 +19,13 @@ class TetrisGame(QMainWindow):
         self.speed = speed
         self.lastShape = ShapeKind.NONE.value
         self._engine = TetrisEngine()
+        self._engine = TetrisEngine(width = 6)# EASY GAME!!
         self._agent = None
         if AIType is not None:
             # self._agent = AIType(self._engine.width,self._engine.height)
-            # self._agent = AIType(self._engin)
             self._agent = AIType
+        self._agent._env._engine = self._engine
+
         self.initUI()
 
     def initUI(self):
@@ -91,8 +93,8 @@ class TetrisGame(QMainWindow):
             if self._agent and not self.nextMove:
                 # feats = self._engine.getFeatures()
                 # print(self._agent._env.state)
-                self.nextMove = self._agent.action(self._agent._env.state)
-                self.nextMove = self._agent._env._engine.action_map[self.nextMove]
+                nextMove = self._agent.action(self._agent._env.state)
+                self.nextMove = self._agent._env._engine.action_map[nextMove]
             if self.nextMove:
                 k = 0
                 while self._state.direction != self.nextMove[0] and k < 4:

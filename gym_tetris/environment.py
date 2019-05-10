@@ -9,20 +9,17 @@ import random
 from collections import namedtuple
 logger = logging.getLogger(__name__)
 
-# Local imports
-# from .tetris import TetrisEngine
+import os
+import sys
 
-# def register_envs():
-#     register(
-#         id='Tetris-v0',
-#         entry_point='gym_tetris.environment:TetrisEnvironment',
-#         kwargs={"width": 6, "height": 22, "num_shapes": 8}
-#     )
-from tetris import TetrisEngine
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# Local imports
+from gym_tetris.tetris import TetrisEngine
+
 def register_envs():
     register(
         id='Tetris-v0',
-        entry_point='environment:TetrisEnvironment',
+        entry_point='gym_tetris.environment:TetrisEnvironment',
         kwargs={"width": 6, "height": 22, "num_shapes": 8}
     )
 

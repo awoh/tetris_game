@@ -6,16 +6,17 @@ import json
 import time
 import random
 import numpy as np
+import sys
 import sampler as smp
 
 import logging
 logger = logging.getLogger(__name__)
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 # local imports
 from environments import FeatureWrapper
 from algorithm import CBMPI
 import models
-
 from gym_tetris import TetrisEnvironment
 
 
@@ -158,7 +159,7 @@ if __name__ == '__main__':
 
         # checkpoint
         if cur_update % train_config['save_interval'] == 0:
-            plc.save_model(os.path.join(train_config['odir'],'model_update_%06d.npy'))
+            plc.save_model(os.path.join(train_config['odir'],'model_update_%06d.npy'%(cur_update)))
         cur_update += 1
 
     end = time.time()

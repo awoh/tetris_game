@@ -1,6 +1,6 @@
 import numpy as np
 import cma
-from sklearn import linear_model, svm
+from sklearn import linear_model
 
 import logging
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class CBMPI(object):
 
         sigma0, pop_size = 0.5, 9 *15     # parameters set by paper number of features * 15
         opts={'popsize': pop_size}
-        sigma0 = 1
+        # sigma0 = 1
         # new_params, es = cma.fmin2(policy_loss,self._policy.get_params(),sigma0, options={'popsize': pop_size})   # need weights of features for every action (so new_params = feat*action)
         # new_params = cma.CMAEvolutionStrategy(self._policy.get_params(), sigma0,opts).optimize(policy_loss).result[0]
         new_params = cma.CMAEvolutionStrategy(self._policy.get_params(), sigma0).optimize(policy_loss).result[0]

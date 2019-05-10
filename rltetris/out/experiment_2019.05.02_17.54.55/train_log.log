@@ -1,8 +1,0 @@
-2019-05-02 17:54:55,441 - __main__ - INFO - 
-###################################################
-	Environment: Blackjack-v0
-	Random Seed: 543
-	N, M, m: 20, 1, 5 
-	Console Logging, Debug Mode: (False,False) 
-	Log Interal, Total Updates, Save Interval: (50,20,1000) 
-###################################################

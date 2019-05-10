@@ -1,6 +1,8 @@
 import numpy as np
 import sys
 from sklearn.linear_model import LinearRegression
+
+sys.path.append("../gym_tetris")
 from gym_tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
 
 import logging
@@ -17,11 +19,14 @@ class BasePolicy(object):
 
 
     def save_model(self,path):
+        print("SAVING MODEL: ")
+        print(self.weights)
         np.save(path, self.weights)
 
     def load_model(self,path):
         # loading and saving from disk
         data = np.load(path)
+        self.weights = data
 
     def action(self,state):
         # choose argmax of policy
@@ -113,7 +118,7 @@ class DUPolicy(BasePolicy):
     def __init__(self,env, num_features, num_actions):
          # [land_height, eroded_cells, row_transitions, Col_transitions, holes, wells, hole depth, rows w/holes]
         # need weights to correspond to the number of features (so 9 for easy board)
-        du_weights = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04,0]
+        du_weights = [-12.63, 6.60, -9.22,-19.77,-13.08,-10.49,-1.61, -24.04]
         weight_blanks = [0]*(num_features - len(du_weights))  #includes for both missing blanks and blocks
         self.weights = du_weights + weight_blanks
         self._env = env
@@ -150,9 +155,8 @@ class LinearPolicy(BasePolicy):
     # policy.act
     # weights for this policy are a 1D array ( flattened from 2D array of features * actions)
     def __init__(self,env, num_features, num_actions):
-        # self.weights = [0]*(num_features)  # weights are a matrix of featuers * num_actions, but flattened to 1D
+        self.weights = [0]*(num_features)  # weights are a matrix of featuers * num_actions, but flattened to 1D
         # self.weights = [-2.18,2.42,-2.17,-3.31,0.95,-2.22,-0.81,-9.65,1.27]
-        self.weights = [0,0,0,0,0,0,0,0,0]
 
         self._env = env        # policy, want possible actions, so pass in environment
         # for i in range(num_actions):
@@ -183,16 +187,6 @@ class LinearPolicy(BasePolicy):
 
 
 class LinearVFA(BaseValue):
-
-
-    # def fit(self,input, out):
-    #     """ fit the model using parameters
-    #     input: the inputs to the regresssion (states/features)
-    #     out: the outputs to the regression (values)
-    #     """
-    #
-    #     self.model.fit(input, out)
-    #     return self.model.coef_
 
     def set_params(self,states, vals):
         """Use linear model to get params """

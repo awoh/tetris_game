@@ -6,9 +6,6 @@ import logging
 logger = logging.getLogger(__name__)
 # from gym_tetris import TetrisEnvironment
 from environment import TetrisEnvironment
-# can just download premade tetris environment online
-
-# to register, look at torchkit (good example of base environment and multiple subtypes)
 
 class FeatureWrapper(object):
     def __init__(self,env):

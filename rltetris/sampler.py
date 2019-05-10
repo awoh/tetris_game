@@ -4,6 +4,11 @@ import numpy as np
 import logging
 import random
 import copy
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from gym_tetris import TetrisEnvironment
 from gym_tetris.tetris import TetrisEngine, TetrisState, Shape, ShapeKind
 logger = logging.getLogger(__name__)

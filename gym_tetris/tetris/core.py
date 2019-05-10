@@ -1,9 +1,12 @@
 import numpy as np
 from enum import Enum
 import random
-
-# from gym_tetris.utils1 import memoized_as_tuple
-from utils1 import memoized_as_tuple
+import os
+import sys
+parent = os.path.join(os.path.dirname(__file__), '..')
+two_up = os.path.join(parent, '..')
+sys.path.append(os.path.join(os.path.dirname(two_up), '..'))
+from gym_tetris.utils1 import memoized_as_tuple
 
 
 # _shapeCoord = (
