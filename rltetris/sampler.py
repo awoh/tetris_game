@@ -44,8 +44,8 @@ def sample_random_states(env,policy, rnd_plc,N):
             action = plc.action(env.state)
             # print("ACTION: " + str(action) +" PIECE: "+ str(env.state.currentShape.kind))
             env.step(action)    # get state of env
-            # print("NEW STATE")
-            # print(env.state.board)
+        # print("NEW STATE")
+        # print(env.state.board)
 
         if not env._terminal:
             states[i] = env.state

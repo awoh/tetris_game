@@ -70,7 +70,9 @@ class TetrisEnvironment(gym.Env):
                  However, official evaluations of your agent are not allowed to
                  use this for learning.
         """
-        if self._terminal:
+        if self._engine.state.currentShape.kind == 0 or self._terminal:
+            self._engine.done = True
+            self._terminal = True
             return -1,-1,-1,{}
         # update state
         a = self._engine.action_map[action]
@@ -137,9 +139,8 @@ class TetrisEnvironment(gym.Env):
                     A[r*self._engine.width+c] = 0 # action not possible
 
         # if O piece (shape 5), only have action set be of size 6 since that's all that's needed
-        if self._engine.state.currentShape.kind == 5:
-            A = A[:6]
-
+        if self._engine.state.currentShape.kind == 5 or  self._engine.state.currentShape.kind == 1:
+            A = A[:12]
         return A
 
 register_envs()

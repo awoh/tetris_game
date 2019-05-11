@@ -12,7 +12,7 @@ from rltetris import models
 from rltetris import environments
 # import environment
 
-model = "../rltetris/out/experiment_2019.05.09_16.01.51/model_update_000002.npy"
+model = "../rltetris/out/experiment_2019.05.10_17.12.41/model_update_000004.npy"
 
 
 if __name__ == '__main__':

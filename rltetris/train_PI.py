@@ -26,6 +26,7 @@ def eval_policy(env, plc):
     lines_cleared = 0
     while not env._terminal:
         action = plc.action(env.state())
+        # print("PIECE: " + str(env._env.state.currentShape.kind))
         # print("action: "+str(action))
         # GETS STUCK HERE SOMETIMES IN AN INFINITE LOOP...NOT SURE WHY!!
         _, reward, _, _ = env.step(action)
@@ -40,7 +41,7 @@ def eval_policy(env, plc):
             return lines_cleared
 
 
-    # print("eval state")
+        print("eval state")
         print(env._env.state.board)
     return lines_cleared
 
@@ -73,23 +74,29 @@ if __name__ == '__main__':
         random.seed(train_config['seed'])
         # check to see if random.seed also sets numpy.seed, if not, set numpy.seed
 
+    # width = 10
+    width = 6
+    # num_actions = width * 4    # there are 40 potential actions (if width = 10)
+    num_actions = width *4 /2  # there are 12 potential actions for i and o pieces
+    # num_actions = 6 # for the O piece
+    num_eval = 20
+    # num_features = 8+(2*width+1) +7 # DU + bertsekas + 7 blocks (even though only using 2 rn)
+    # num_features = 8 + 7 # bertsekas + pieces
+    # num_features = 9 # without pieces, just bertsekas
+    # f = 1    EASY TETRIS
+    f = 2
+    num_features = 9 + f   #bertsekas + pieces
+
 # prints out what configuration you just ran on the command line
     log_str = '\r\n###################################################\r\n' + \
               '\tEnvironment: %s\r\n' % train_config['env'] + \
               '\tRandom Seed: %s\r\n' % str(train_config['seed']) + \
-              '\tN, M, m: %d, %d, %d \r\n' % (train_config['N'],train_config['M'],train_config['m']) + \
+              '\tN, M, m, Pieces: %d, %d, %d, %d \r\n' % (train_config['N'],train_config['M'],train_config['m'], f) + \
               '\tConsole Logging, Debug Mode: (%s,%s) \r\n' % (str(train_config['console']),str(train_config['debug'])) + \
               '\tLog Interal, Total Updates, Save Interval: (%d,%d,%d) \r\n' % (train_config['log_interval'],train_config['num_updates'],train_config['save_interval']) + \
               '###################################################'
     logger.info(log_str)
-    # width = 10
-    width = 6
-    # num_actions = width * 4    # there are 40 potential actions (if width = 10)
-    num_actions = 6 # for the O piece
-    num_eval = 20
-    # num_features = 8+(2*width+1) +7 # DU + bertsekas + 7 blocks (even though only using 2 rn)
-    # num_features = 8 + 7 # bertsekas + pieces
-    num_features = 9 # without pieces, just bertsekas
+
     init_plc = models.DUPolicy(env,num_features, num_actions)
     critic,plc = models.LinearVFA(num_features),models.LinearPolicy(env,num_features, num_actions)
 
@@ -116,6 +123,8 @@ if __name__ == '__main__':
         rnd_plc = models.RandomPolicy(env,num_features,num_actions)
         init_states = smp.sample_random_states(env, init_plc, rnd_plc, train_config['N'])
         # init_states = smp.sample_random_states(env, models.RandomPolicy(env,num_features,num_actions), train_config['N'])
+        # w_env.reset()
+        # eval_policy(w_env, plc)
         # quit()
         init_features = [0]*len(init_states)
         # get features for every state

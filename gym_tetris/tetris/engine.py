@@ -13,8 +13,8 @@ class TetrisState(object):
         self.y = y
         self.direction = direction
         self.currentShape = currentShape
-        # self.nextShape = nextShape
-        self.nextShape = Shape(5)    #FOR TRIVIAL TETRIS GAME!!
+        self.nextShape = nextShape
+        # self.nextShape = Shape(5)    #FOR TRIVIAL TETRIS GAME!!
 
         self.width = 6
         # self.width = width
@@ -74,8 +74,8 @@ class TetrisEngine(object):
             self.state.direction = 0
             self.state.currentShape = self.state.nextShape
             # self.state.nextShape = Shape(random.randint(1, 7))
-            self.state.nextShape = Shape(5)   #FOR TRIVIAL STATE!!
-            # self.state.nextShape = Shape(np.random.choice([1,5]))   #for o + i piece
+            # self.state.nextShape = Shape(5)   #FOR TRIVIAL STATE!!
+            self.state.nextShape = Shape(np.random.choice([1,5]))   #for o + i piece
             result = True
         else:
             self.state.currentShape = Shape()
@@ -178,7 +178,6 @@ class TetrisEngine(object):
         for coord in self.state.last_piece_drop_coords:
             if not rmask[coord[1]]:
                 self.state.num_last_piece_cleared += 1
-        # print("REMOVED: " + str(self.state.num_last_piece_cleared))
 
         if num_full > 0:
             new_board = np.zeros_like(self.state.board)
@@ -268,10 +267,15 @@ class TetrisEngine(object):
         #     rbf_height = math.exp(-1*((c - (i*h)/4)**2)/(2*(h/5)**2))
         #     self.features.append(numer / denom)
 
-        # # PIECE FEATURES (7)
+        # PIECE FEATURES (7)
         # pieces = [0]*7
+        pieces = [0]*2
+        if self.state.currentShape.kind ==1:
+            pieces[0] = 1
+        else:
+            pieces[1] = 1
         # pieces[self.state.currentShape.kind-1] = 1
-        # self.features += pieces
+        self.features += pieces
 
         return self.features
 

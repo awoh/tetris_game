@@ -65,6 +65,10 @@ class BasePolicy(object):
         # print(scores)
         best_actions = np.argwhere(scores == np.amax(scores)).flatten()
         action = np.random.choice(best_actions)    # need to get random one in best_actions
+
+        if scores[action] == -sys.maxsize -1:
+            self._env._engine.done = True
+            self._env._terminal = True
         # print(action)
         return action
 
