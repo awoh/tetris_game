@@ -25,7 +25,7 @@ def sample_random_states(env,policy, rnd_plc,N):
     # Step 2 - run the environment and collect final states
     i=0
     while i < N-5:
-        x = random.randint(5,7)    # number of moves to make when creating init state
+        x = random.randint(15,20)    # number of moves to make when creating init state
         # print("X: "+str(x))
         env.reset() # reset environment
 
@@ -44,8 +44,8 @@ def sample_random_states(env,policy, rnd_plc,N):
             action = plc.action(env.state)
             # print("ACTION: " + str(action) +" PIECE: "+ str(env.state.currentShape.kind))
             env.step(action)    # get state of env
-        # print("NEW STATE")
-        # print(env.state.board)
+        print("NEW STATE")
+        print(env.state.board)
 
         if not env._terminal:
             states[i] = env.state

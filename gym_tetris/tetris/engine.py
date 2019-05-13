@@ -75,7 +75,8 @@ class TetrisEngine(object):
             self.state.currentShape = self.state.nextShape
             # self.state.nextShape = Shape(random.randint(1, 7))
             # self.state.nextShape = Shape(5)   #FOR TRIVIAL STATE!!
-            self.state.nextShape = Shape(np.random.choice([1,5]))   #for o + i piece
+            self.state.nextShape = Shape(np.random.choice([1,5]))   #for i and o pieces
+            # self.state.nextShape = Shape(np.random.choice([1,5,7]))   #for o, i, and z piece
             result = True
         else:
             self.state.currentShape = Shape()
@@ -269,13 +270,16 @@ class TetrisEngine(object):
 
         # PIECE FEATURES (7)
         # pieces = [0]*7
-        pieces = [0]*2
-        if self.state.currentShape.kind ==1:
-            pieces[0] = 1
-        else:
-            pieces[1] = 1
+        # pieces = [0]*3
+        # if self.state.currentShape.kind ==1:
+        #     pieces[0] = 1
+        # elif self.state.currentShape.kind == 5:
+        #     pieces[1] = 1
+        # else:
+        #     pieces[2] = 1
+
         # pieces[self.state.currentShape.kind-1] = 1
-        self.features += pieces
+        # self.features += pieces
 
         return self.features
 

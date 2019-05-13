@@ -127,32 +127,6 @@ class DUPolicy(BasePolicy):
         self.weights = du_weights + weight_blanks
         self._env = env
 
-    # def action(self,state):
-    #     # choose argmax of policy
-    #     # want a vector of actions that are/aren't allowed and then only
-    #     # do argmax on ones that are allowed.
-    #     # multiply state * every array in weights and take max of those
-    #     A = self._env.get_action_set()
-    #     scores = np.empty(shape = len(A))
-    #     for i in range(len(A)):
-    #         if A[i] == 0:
-    #             scores[i] = -sys.maxsize -1
-    #         else:
-    #             self._env.reset()
-    #             new_s = TetrisState(np.ndarray.copy(state.board),state.x,state.y,
-    #                                 state.direction,state.currentShape,state.nextShape, state.width,
-    #                                 state.height_of_last_piece,state.num_last_lines_cleared,
-    #                                 state.num_last_piece_cleared,state.last_piece_drop_coords)
-    #             self._env.set_state(new_s)  #set the copied board as the state
-    #             self._env.step(i)
-    #             scores[i] = np.dot(self.weights, self._env.get_du_features())
-    #
-    #     self._env.reset()
-    #     self._env.set_state(state)  #reset back to original state
-    #     best_actions = np.argwhere(scores == np.amax(scores)).flatten()
-    #     action = np.random.choice(best_actions)    # need to get random one in best_actions
-    #     return action
-
 
 # Extend classes above to implement policies, and value function approx
 class LinearPolicy(BasePolicy):
@@ -163,31 +137,6 @@ class LinearPolicy(BasePolicy):
         # self.weights = [-2.18,2.42,-2.17,-3.31,0.95,-2.22,-0.81,-9.65,1.27]
 
         self._env = env        # policy, want possible actions, so pass in environment
-        # for i in range(num_actions):
-
-            # self.weights[i*15+4] = -1000    # SETTING THE NUMBER OF HOLES TO REALLY BAD INITIALLY
-
-
-    # def action(self,state):
-    #     """State is list of features for the state. Returns index of action to use """
-    #     vector_weights = np.reshape(self.weights, newshape = (self._env._engine.width*4, len(state))) #number of actions is 40
-    #     action_scores = [np.dot(w, state) for w in vector_weights]
-    #
-    #     # do one-step lookahead with the weights for every single action
-    #
-    #     # want only actions that are valid, so make all others awful
-    #     valid_actions = self._env.get_action_set()
-    #     for i in range(len(valid_actions)):
-    #         if valid_actions[i] == 0:
-    #             action_scores[i] = -sys.maxsize -1
-    #
-    #     # print(action_scores)
-    #
-    #     best_actions = np.argwhere(action_scores == np.amax(action_scores)).flatten()
-    #     action = np.random.choice(best_actions)    # need to get random one in best_actions
-    #     # print("ACTION POLICY: ")   #action policy
-    #     # print(vector_weights[action])
-    #     return action
 
 
 class LinearVFA(BaseValue):
@@ -197,9 +146,6 @@ class LinearVFA(BaseValue):
         # new_val = linear_model.LinearRegression()
         self.model.fit(states, vals)
         self.weights = self.model.coef_
-
-
-
 
 
 

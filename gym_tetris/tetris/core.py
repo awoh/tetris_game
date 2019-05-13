@@ -45,7 +45,8 @@ class ShapeKind(Enum):
     @classmethod
     def random(cls):
         # return cls(random.randint(1, 7))
-        return cls(np.random.choice([1,5]))    #FOR TRIVIAL VERSION!!!
+        return cls(np.random.choice([1,5]))   #FOR TRIVIAL VERSION!!
+        return cls(np.random.choice([1,5,7]))    #FOR TRIVIAL VERSION!!!
 
 
 @memoized_as_tuple
@@ -97,7 +98,8 @@ class Shape(object):
     @classmethod
     def random(cls):
         # return cls(random.randint(1, 7))
-        return cls(np.random.choice([1,5]))
+        return cls(np.random.choice([1,5]))   #FOR TRIVIAL VERSION!!
+        return cls(np.random.choice([1,5,7]))
 
     def __init__(self, kind=0):
         self.kind = kind

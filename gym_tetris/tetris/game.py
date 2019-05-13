@@ -107,8 +107,8 @@ class TetrisGame(QMainWindow):
                     elif self._state.x < self.nextMove[1]:
                         self._engine.moveRight()
                     k += 1
-            # lines = self._engine.dropDown()
-            lines = self._engine.moveDown()
+            lines = self._engine.dropDown()
+            # lines = self._engine.moveDown()
             self.tboard.score += lines
             if self.lastShape != self._state.currentShape:
                 self.nextMove = None

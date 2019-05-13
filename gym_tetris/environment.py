@@ -139,7 +139,7 @@ class TetrisEnvironment(gym.Env):
                     A[r*self._engine.width+c] = 0 # action not possible
 
         # if O piece (shape 5), only have action set be of size 6 since that's all that's needed
-        if self._engine.state.currentShape.kind == 5 or  self._engine.state.currentShape.kind == 1:
+        if self._engine.state.currentShape.kind == 5 or  self._engine.state.currentShape.kind == 1 or self._engine.state.currentShape.kind == 7:
             A = A[:12]
         return A
 

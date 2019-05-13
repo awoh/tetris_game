@@ -35,14 +35,14 @@ def eval_policy(env, plc):
         if not env._terminal:
             lines_cleared += reward
 
-        print("reward: "+str(lines_cleared))
+        # print("reward: "+str(lines_cleared))
         # print(env._terminal)
-        if lines_cleared > 50:
+        if lines_cleared > 1000:
             return lines_cleared
 
 
-        print("eval state")
-        print(env._env.state.board)
+        # print("eval state")
+        # print(env._env.state.board)
     return lines_cleared
 
 if __name__ == '__main__':
@@ -77,21 +77,21 @@ if __name__ == '__main__':
     # width = 10
     width = 6
     # num_actions = width * 4    # there are 40 potential actions (if width = 10)
-    num_actions = width *4 /2  # there are 12 potential actions for i and o pieces
+    num_actions = width *4 /2  # there are 12 potential actions for i and z pieces (only 6 for the o piece)
     # num_actions = 6 # for the O piece
     num_eval = 20
     # num_features = 8+(2*width+1) +7 # DU + bertsekas + 7 blocks (even though only using 2 rn)
-    # num_features = 8 + 7 # bertsekas + pieces
-    # num_features = 9 # without pieces, just bertsekas
-    # f = 1    EASY TETRIS
-    f = 2
-    num_features = 9 + f   #bertsekas + pieces
+    # p = 1    EASY TETRIS
+    p = 2
+    # p = 3    # 3 pieces!!!
+    # num_features = 9 + p   #bertsekas + pieces
+    num_features = 9  #BERTSEKAS FEATURES
 
 # prints out what configuration you just ran on the command line
     log_str = '\r\n###################################################\r\n' + \
               '\tEnvironment: %s\r\n' % train_config['env'] + \
               '\tRandom Seed: %s\r\n' % str(train_config['seed']) + \
-              '\tN, M, m, Pieces: %d, %d, %d, %d \r\n' % (train_config['N'],train_config['M'],train_config['m'], f) + \
+              '\tN, M, m, Pieces: %d, %d, %d, %d \r\n' % (train_config['N'],train_config['M'],train_config['m'], p) + \
               '\tConsole Logging, Debug Mode: (%s,%s) \r\n' % (str(train_config['console']),str(train_config['debug'])) + \
               '\tLog Interal, Total Updates, Save Interval: (%d,%d,%d) \r\n' % (train_config['log_interval'],train_config['num_updates'],train_config['save_interval']) + \
               '###################################################'
@@ -100,7 +100,14 @@ if __name__ == '__main__':
     init_plc = models.DUPolicy(env,num_features, num_actions)
     critic,plc = models.LinearVFA(num_features),models.LinearPolicy(env,num_features, num_actions)
 
-
+    model =  "../rltetris/out/experiment_2019.05.10_17.12.41/model_update_000002.npy"
+    plc.load_model(model)
+    print(plc.weights)
+    model =  "../rltetris/out/experiment_2019.05.10_17.12.41/model_update_000004.npy"
+    plc.load_model(model)
+    print(plc.weights)
+    quit()
+    plc.weights = [-5,0,0, 0, 0,0,0,0,5]
     algo = CBMPI(plc,critic,train_config)
     # episode_results = np.array([]).reshape((0,6))     # will allow for training curve like in paper
     episode_results = np.empty(shape = [train_config['num_updates']*num_eval,3]) # allocate nujmpy array for all of iterations and evaluations initially, so can add more to it later
@@ -134,7 +141,7 @@ if __name__ == '__main__':
             init_features[i] = env.get_features()
         # print(init_features)
         v_batch = smp.get_vh(w_env,init_states,plc,m,gamma,num_features)
-        print(v_batch)
+        # print(v_batch)
 
         q_batch = smp.get_qh(w_env,init_states,plc,m,gamma,num_features, num_actions)
 
